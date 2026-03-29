@@ -8,6 +8,7 @@ export interface TeamMember {
   defaultSalary: number;
   salary: number;
   count: number;
+  months: number;
   b2bOnly?: boolean;
 }
 
@@ -83,6 +84,7 @@ export type GameAction =
   | { type: "TOGGLE_MARKET"; payload: MarketType }
   | { type: "SET_TEAM_COUNT"; payload: { id: string; count: number } }
   | { type: "SET_TEAM_SALARY"; payload: { id: string; salary: number } }
+  | { type: "SET_TEAM_MONTHS"; payload: { id: string; months: number } }
   | { type: "TOGGLE_OFFICE"; payload: string }
   | { type: "TOGGLE_GROWTH"; payload: string }
   | { type: "TOGGLE_LIFESTYLE"; payload: string }

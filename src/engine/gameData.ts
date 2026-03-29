@@ -9,6 +9,7 @@ export const initialTeam: TeamMember[] = [
     defaultSalary: 0,
     salary: 0,
     count: 0,
+    months: 18,
   },
   {
     id: "senior_eng",
@@ -18,6 +19,7 @@ export const initialTeam: TeamMember[] = [
     defaultSalary: 12000,
     salary: 12000,
     count: 0,
+    months: 18,
   },
   {
     id: "junior_eng",
@@ -27,6 +29,7 @@ export const initialTeam: TeamMember[] = [
     defaultSalary: 6000,
     salary: 6000,
     count: 0,
+    months: 18,
   },
   {
     id: "offshore",
@@ -36,6 +39,7 @@ export const initialTeam: TeamMember[] = [
     defaultSalary: 7500,
     salary: 7500,
     count: 0,
+    months: 18,
   },
   {
     id: "designer",
@@ -45,6 +49,7 @@ export const initialTeam: TeamMember[] = [
     defaultSalary: 9000,
     salary: 9000,
     count: 0,
+    months: 18,
   },
   {
     id: "marketing",
@@ -54,6 +59,7 @@ export const initialTeam: TeamMember[] = [
     defaultSalary: 8000,
     salary: 8000,
     count: 0,
+    months: 18,
   },
   {
     id: "sales",
@@ -63,6 +69,7 @@ export const initialTeam: TeamMember[] = [
     defaultSalary: 7000,
     salary: 7000,
     count: 0,
+    months: 18,
     b2bOnly: true,
   },
   {
@@ -73,6 +80,7 @@ export const initialTeam: TeamMember[] = [
     defaultSalary: 2000,
     salary: 2000,
     count: 0,
+    months: 18,
   },
 ];
 

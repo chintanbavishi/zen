@@ -89,6 +89,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, team };
     }
 
+    case "SET_TEAM_MONTHS": {
+      const team = state.team.map((t) =>
+        t.id === action.payload.id ? { ...t, months: Math.max(1, Math.min(18, action.payload.months)) } : t
+      );
+      return { ...state, team };
+    }
+
     case "TOGGLE_OFFICE": {
       const offices = state.offices.map((o) =>
         o.id === action.payload ? { ...o, selected: !o.selected } : o

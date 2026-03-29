@@ -22,8 +22,19 @@ export function ScreenFastForward({ state, onDone }: Props) {
 
   const events = state.monthEvents;
   const startCash = getRemainingCash(state);
-  const burn = getMonthlyBurn(state);
-  const cashAt = (i: number) => Math.max(0, startCash - burn * (i + 1));
+  const baseBurn = getMonthlyBurn(state);
+  const fullTeamBurn = state.team.reduce((s, t) => s + t.salary * t.count, 0);
+  const nonTeamBurn = baseBurn - fullTeamBurn;
+
+  // Compute cash at each month accounting for team contract durations
+  const cashAt = (monthIdx: number) => {
+    let cash = startCash;
+    for (let m = 1; m <= monthIdx + 1; m++) {
+      const teamBurn = state.team.reduce((s, t) => s + (m <= t.months ? t.salary * t.count : 0), 0);
+      cash -= (teamBurn + nonTeamBurn);
+    }
+    return Math.max(0, cash);
+  };
   const displayedCash = revealed > 0 ? cashAt(revealed - 1) : startCash;
   const animCash = useCountUp(displayedCash, 400);
 

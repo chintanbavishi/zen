@@ -90,7 +90,11 @@ export function simulateGame(state: GameState): SimResult {
   ];
 
   for (let month = 1; month <= TOTAL_MONTHS; month++) {
-    cash -= monthlyBurn;
+    // Team burn is dynamic — only pay team members who are still on contract
+    const teamBurnThisMonth = state.team.reduce((s, t) => s + (month <= t.months ? t.salary * t.count : 0), 0);
+    const nonTeamBurn = monthlyBurn - state.team.reduce((s, t) => s + t.salary * t.count, 0);
+    const burnThisMonth = teamBurnThisMonth + nonTeamBurn;
+    cash -= burnThisMonth;
 
     if (cash <= 0 && diedAtMonth === null) {
       diedAtMonth = month;
@@ -98,15 +102,22 @@ export function simulateGame(state: GameState): SimResult {
       break;
     }
 
+    // Check if any team contracts just ended
+    for (const t of state.team) {
+      if (t.count > 0 && t.months === month) {
+        choiceEvents.push({ month, text: `your ${t.role.toLowerCase()}'s ${t.months}-month contract just ended. bye.`, emoji: "👋" });
+      }
+    }
+
     // Check for choice-based events first
     const choiceEvent = choiceEvents.find((e) => e.month === month);
     if (choiceEvent) {
-      events.push({ month, text: choiceEvent.text, emoji: choiceEvent.emoji, moneyDelta: -monthlyBurn });
+      events.push({ month, text: choiceEvent.text, emoji: choiceEvent.emoji, moneyDelta: -burnThisMonth });
     } else {
       // Generic event based on progression
       const idx = Math.min(month - 1, genericEvents.length - 1);
       const evt = rand() > 0.4 ? genericEvents[idx] : genericEvents[Math.floor(rand() * genericEvents.length)];
-      events.push({ month, text: evt.text, emoji: evt.emoji, moneyDelta: -monthlyBurn });
+      events.push({ month, text: evt.text, emoji: evt.emoji, moneyDelta: -burnThisMonth });
     }
   }
 

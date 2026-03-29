@@ -86,6 +86,26 @@ describe("gameReducer", () => {
     expect(state.screen).toBe(2);
   });
 
+  it("SET_TEAM_MONTHS updates contract duration", () => {
+    let state = initialState();
+    state = gameReducer(state, { type: "SET_TEAM_COUNT", payload: { id: "senior_eng", count: 1 } });
+    state = gameReducer(state, { type: "SET_TEAM_MONTHS", payload: { id: "senior_eng", months: 3 } });
+    expect(state.team.find((t) => t.id === "senior_eng")!.months).toBe(3);
+  });
+
+  it("SET_TEAM_MONTHS clamps between 1 and 18", () => {
+    let state = initialState();
+    state = gameReducer(state, { type: "SET_TEAM_MONTHS", payload: { id: "senior_eng", months: 0 } });
+    expect(state.team.find((t) => t.id === "senior_eng")!.months).toBe(1);
+    state = gameReducer(state, { type: "SET_TEAM_MONTHS", payload: { id: "senior_eng", months: 24 } });
+    expect(state.team.find((t) => t.id === "senior_eng")!.months).toBe(18);
+  });
+
+  it("team members default to 18 months", () => {
+    const state = initialState();
+    state.team.forEach((t) => expect(t.months).toBe(18));
+  });
+
   it("RESTART resets to initial state", () => {
     let state = initialState();
     state = gameReducer(state, { type: "TOGGLE_MARKET", payload: "b2c" });
