@@ -1,8 +1,9 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { toPng } from "html-to-image";
 import type { GameState } from "../engine/gameState";
 import { ShareCard } from "../components/ShareCard";
+import { useSound } from "../hooks/useSound";
 
 interface Props {
   state: GameState;
@@ -13,6 +14,17 @@ export function ScreenResult({ state, onRestart }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
   const survived = state.outcome === "raised";
   const isB2B = state.businessType === "b2b";
+  const raised = survived;
+
+  const { play: playCrowd } = useSound("crowd");
+  const { play: playSad } = useSound("sadpiano");
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (raised) playCrowd();
+      else playSad();
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [raised, playCrowd, playSad]);
 
   const primaryLabel = isB2B ? "ARR" : "MAU";
   const primaryValue = isB2B

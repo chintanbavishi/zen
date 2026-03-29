@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useCountUp } from "../hooks/useCountUp";
+import { useSound } from "../hooks/useSound";
 
 interface Props {
   onStart: () => void;
@@ -7,6 +9,11 @@ interface Props {
 
 export function ScreenWire({ onStart }: Props) {
   const count = useCountUp(250000, 2500);
+  const { play: playChaching } = useSound("chaching");
+  useEffect(() => {
+    const timer = setTimeout(() => playChaching(), 2500);
+    return () => clearTimeout(timer);
+  }, [playChaching]);
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center bg-bg text-white px-6">

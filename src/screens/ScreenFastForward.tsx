@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { MonthEvent } from "../engine/gameState";
+import { useSound } from "../hooks/useSound";
 
 interface Props {
   events: MonthEvent[];
@@ -65,6 +66,16 @@ export function ScreenFastForward({ events, startingCash, monthlyBurn, onDone }:
       return () => clearTimeout(t);
     }
   }, [allShown]);
+
+  const { playLoop: startHeartbeat, stop: stopHeartbeat } = useSound("heartbeat");
+  useEffect(() => {
+    if (cash < 30_000 && cash > 0) {
+      startHeartbeat(1500);
+    } else {
+      stopHeartbeat();
+    }
+    return () => stopHeartbeat();
+  }, [cash < 30_000]);
 
   const isLow = cash < 30_000;
 
