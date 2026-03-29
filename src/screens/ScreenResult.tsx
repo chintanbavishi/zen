@@ -110,6 +110,30 @@ export function ScreenResult({ state, onRestart }: Props) {
         </div>
       </motion.div>
 
+      {/* Leaderboard stat */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2.2 }}
+        className="text-sm text-white/40 mb-4 lowercase"
+      >
+        {survived
+          ? "87% of people died. you're in the top 13% of founders."
+          : "87% of people died. you're one of them."}
+      </motion.div>
+
+      {/* Easter egg */}
+      {state.easterEgg && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 3 }}
+          className="text-sm text-warning bg-warning/10 rounded-xl px-4 py-3 mb-6 lowercase"
+        >
+          {state.easterEgg}
+        </motion.div>
+      )}
+
       {/* Action buttons */}
       <motion.div
         initial={{ opacity: 0 }}
