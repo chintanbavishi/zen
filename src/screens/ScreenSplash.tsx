@@ -9,11 +9,11 @@ interface Props {
 export function ScreenSplash({ onStart }: Props) {
   const [showText, setShowText] = useState(false);
   const [showButton, setShowButton] = useState(false);
-  const count = useCountUp(250000, 2000);
+  const count = useCountUp(250000, 1500); // Fast count-up — exciting!
 
   useEffect(() => {
-    const t1 = setTimeout(() => setShowText(true), 2500);
-    const t2 = setTimeout(() => setShowButton(true), 3500);
+    const t1 = setTimeout(() => setShowText(true), 1800);
+    const t2 = setTimeout(() => setShowButton(true), 2500);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);

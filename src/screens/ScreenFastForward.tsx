@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { GameState } from "../engine/gameState";
 import { useSound } from "../hooks/useSound";
 import { useCountUp } from "../hooks/useCountUp";
+import { getRemainingCash, getMonthlyBurn } from "../engine/gameReducer";
 import { STARTING_CASH } from "../engine/constants";
 
 interface Props {
@@ -33,10 +34,13 @@ export function ScreenFastForward({ state, onDone }: Props) {
   const { play: playCha } = useSound("chaching");
 
   const events = state.monthEvents;
-  const finalCash = events.length > 0 ? Math.max(0, events[events.length - 1].moneyDelta) : STARTING_CASH;
-  const displayedCash = revealedCount > 0
-    ? Math.max(0, events[Math.min(revealedCount - 1, events.length - 1)].moneyDelta)
-    : STARTING_CASH;
+
+  // Compute cumulative cash at each month
+  const startCash = getRemainingCash(state);
+  const burn = getMonthlyBurn(state);
+  const cashAtMonth = (monthIdx: number) => Math.max(0, startCash - burn * (monthIdx + 1));
+  const finalCash = events.length > 0 ? cashAtMonth(events.length - 1) : startCash;
+  const displayedCash = revealedCount > 0 ? cashAtMonth(revealedCount - 1) : startCash;
 
   const animatedCash = useCountUp(displayedCash, 600);
 
@@ -49,12 +53,9 @@ export function ScreenFastForward({ state, onDone }: Props) {
     }
     timerRef.current = setTimeout(() => {
       const next = revealedCount + 1;
-      const event = events[revealedCount];
-      if (event) {
-        const cash = Math.max(0, event.moneyDelta);
-        if (cash < 30_000) playHeartbeat();
-        else playWhoosh();
-      }
+      const cashNow = cashAtMonth(revealedCount);
+      if (cashNow < 30_000) playHeartbeat();
+      else playWhoosh();
       setRevealedCount(next);
     }, 1500);
 
@@ -126,7 +127,7 @@ export function ScreenFastForward({ state, onDone }: Props) {
           <div className="flex flex-col gap-0">
             <AnimatePresence>
               {events.slice(0, revealedCount).map((event, idx) => {
-                const cash = Math.max(0, event.moneyDelta);
+                const cash = cashAtMonth(idx);
                 const isLastRevealed = idx === revealedCount - 1;
                 return (
                   <motion.div
