@@ -10,6 +10,8 @@ import { ScreenGrowth } from "./screens/ScreenGrowth";
 import { ScreenTemptation } from "./screens/ScreenTemptation";
 import { ScreenCurveball } from "./screens/ScreenCurveball";
 import { ScreenFastForward } from "./screens/ScreenFastForward";
+import { ScreenPitch } from "./screens/ScreenPitch";
+import { ScreenResult } from "./screens/ScreenResult";
 import type { BusinessType, TeamChoice, OfficeChoice, GrowthChoice, TemptationId, CurveballId } from "./engine/gameState";
 
 export default function App() {
@@ -64,6 +66,8 @@ export default function App() {
       monthlyBurn={state.monthlyBurn}
       onDone={advance}
     />,
+    <ScreenPitch key="pitch" state={state} onContinue={advance} />,
+    <ScreenResult key="result" state={state} onRestart={() => dispatch({ type: "RESTART" })} />,
   ];
 
   return (
