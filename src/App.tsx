@@ -7,7 +7,9 @@ import { ScreenType } from "./screens/ScreenType";
 import { ScreenTeam } from "./screens/ScreenTeam";
 import { ScreenOffice } from "./screens/ScreenOffice";
 import { ScreenGrowth } from "./screens/ScreenGrowth";
-import type { BusinessType, TeamChoice, OfficeChoice, GrowthChoice } from "./engine/gameState";
+import { ScreenTemptation } from "./screens/ScreenTemptation";
+import { ScreenCurveball } from "./screens/ScreenCurveball";
+import type { BusinessType, TeamChoice, OfficeChoice, GrowthChoice, TemptationId, CurveballId } from "./engine/gameState";
 
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, undefined, initialState);
@@ -34,12 +36,25 @@ export default function App() {
     advance();
   };
 
+  const handleTemptation = (accepted: TemptationId[], skipped: TemptationId[]) => {
+    accepted.forEach((id) => dispatch({ type: "ACCEPT_TEMPTATION", payload: id }));
+    skipped.forEach((id) => dispatch({ type: "SKIP_TEMPTATION", payload: id }));
+    advance();
+  };
+
+  const handleCurveball = (id: CurveballId, choice: "fix" | "ignore") => {
+    dispatch({ type: "RESOLVE_CURVEBALL", payload: { id, choice } });
+    advance();
+  };
+
   const screens = [
     <ScreenWire key="wire" onStart={advance} />,
     <ScreenType key="type" onChoose={handleType} />,
     <ScreenTeam key="team" onChoose={handleTeam} />,
     <ScreenOffice key="office" onChoose={handleOffice} />,
     <ScreenGrowth key="growth" businessType={state.businessType ?? "b2c"} onChoose={handleGrowth} />,
+    <ScreenTemptation key="tempt" onDone={handleTemptation} />,
+    <ScreenCurveball key="curve" seed={state.cash} onResolve={handleCurveball} />,
   ];
 
   return (
