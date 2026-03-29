@@ -180,59 +180,57 @@ function SFScene() {
   );
 }
 
-/* ─── Ambient SF music (Web Audio API) ─── */
-let audioStarted = false;
-let gainNode: GainNode | null = null;
+/* ─── Background music ─── */
+let audioEl: HTMLAudioElement | null = null;
+let musicReady = false;
 
-function startAmbientMusic() {
-  if (audioStarted) return;
-  audioStarted = true;
+const LOOP_START = 290; // 4:50
+const LOOP_END = 372;   // 6:12
 
-  const ctx = new AudioContext();
-  gainNode = ctx.createGain();
-  gainNode.gain.setValueAtTime(0, ctx.currentTime);
-  gainNode.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 2);
-  gainNode.connect(ctx.destination);
+function initMusic() {
+  if (audioEl) return;
+  audioEl = document.createElement("audio");
+  audioEl.src = "/welcome-to-sf.mp3";
+  audioEl.volume = 0.8;
+  audioEl.preload = "auto";
 
-  // Warm pad chord: C3, E3, G3, B3 — dreamy major 7th
-  const freqs = [130.81, 164.81, 196.0, 246.94];
-  freqs.forEach((freq, i) => {
-    const osc = ctx.createOscillator();
-    const oscGain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    // Slight detune for warmth
-    osc.detune.setValueAtTime((i - 1.5) * 4, ctx.currentTime);
-    oscGain.gain.setValueAtTime(0.3, ctx.currentTime);
-    osc.connect(oscGain).connect(gainNode!);
-    osc.start(ctx.currentTime + i * 0.3);
-
-    // Slow LFO tremolo for movement
-    const lfo = ctx.createOscillator();
-    const lfoGain = ctx.createGain();
-    lfo.type = "sine";
-    lfo.frequency.setValueAtTime(0.3 + i * 0.1, ctx.currentTime);
-    lfoGain.gain.setValueAtTime(0.08, ctx.currentTime);
-    lfo.connect(lfoGain).connect(oscGain.gain);
-    lfo.start(ctx.currentTime);
+  audioEl.addEventListener("canplay", () => {
+    if (!musicReady) {
+      musicReady = true;
+      audioEl!.currentTime = LOOP_START;
+      playMusic();
+    }
   });
 
-  // High shimmery layer
-  const shimmer = ctx.createOscillator();
-  const shimGain = ctx.createGain();
-  shimmer.type = "triangle";
-  shimmer.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-  shimGain.gain.setValueAtTime(0.04, ctx.currentTime);
-  shimmer.connect(shimGain).connect(gainNode);
-  shimmer.start(ctx.currentTime + 1);
+  audioEl.addEventListener("timeupdate", () => {
+    if (audioEl && audioEl.currentTime >= LOOP_END) {
+      audioEl.currentTime = LOOP_START;
+    }
+  });
+
+  audioEl.load();
+}
+
+function playMusic() {
+  if (!audioEl) return;
+  audioEl.play().catch(() => {
+    // Autoplay blocked — will retry on user interaction
+  });
 }
 
 function fadeOutMusic() {
-  if (gainNode) {
-    const ctx = gainNode.context as AudioContext;
-    gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.5);
-  }
+  if (!audioEl) return;
+  const el = audioEl;
+  const fade = setInterval(() => {
+    if (el.volume > 0.05) {
+      el.volume = Math.max(0, el.volume - 0.05);
+    } else {
+      el.pause();
+      clearInterval(fade);
+    }
+  }, 80);
 }
+
 
 /* ═══════════ MAIN COMPONENT ═══════════ */
 export function LandingPage() {
@@ -242,9 +240,22 @@ export function LandingPage() {
   const done = progress >= 5;
   const [showCTA, setShowCTA] = useState(false);
 
+  // Init audio on mount, play on any interaction if autoplay blocked
+  useEffect(() => {
+    initMusic();
+    const retry = () => playMusic();
+    window.addEventListener("click", retry);
+    window.addEventListener("keydown", retry);
+    window.addEventListener("touchstart", retry);
+    return () => {
+      window.removeEventListener("click", retry);
+      window.removeEventListener("keydown", retry);
+      window.removeEventListener("touchstart", retry);
+    };
+  }, []);
+
   const advance = useCallback(() => {
     if (done) return;
-    startAmbientMusic(); // starts on first interaction
     setProgress(p => {
       const next = p + 1;
       if (next >= 5) {
