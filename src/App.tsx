@@ -7,6 +7,11 @@ import { ScreenMarket } from "./screens/ScreenMarket";
 import { ScreenTeam } from "./screens/ScreenTeam";
 import { ScreenOffice } from "./screens/ScreenOffice";
 import { ScreenGrowth } from "./screens/ScreenGrowth";
+import { ScreenLifestyle } from "./screens/ScreenLifestyle";
+import { ScreenCurveball } from "./screens/ScreenCurveball";
+import { ScreenFastForward } from "./screens/ScreenFastForward";
+import { ScreenVerdict } from "./screens/ScreenVerdict";
+import { ScreenShare } from "./screens/ScreenShare";
 
 const TOTAL_SCREENS = 10;
 
@@ -28,18 +33,32 @@ export default function App() {
         return <ScreenOffice state={state} dispatch={dispatch} onNext={next} onBack={back} />;
       case 4:
         return <ScreenGrowth state={state} dispatch={dispatch} onNext={next} onBack={back} />;
-      default:
+      case 5:
+        return <ScreenLifestyle state={state} dispatch={dispatch} onNext={next} onBack={back} />;
+      case 6:
+        return <ScreenCurveball state={state} dispatch={dispatch} onNext={next} onBack={back} />;
+      case 7:
         return (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-muted text-lg">screens 5-9 coming next...</p>
-          </div>
+          <ScreenFastForward
+            state={state}
+            onDone={() => {
+              dispatch({ type: "RUN_SIMULATION" });
+              next();
+            }}
+          />
         );
+      case 8:
+        return <ScreenVerdict state={state} onContinue={next} />;
+      case 9:
+        return <ScreenShare state={state} onRestart={() => dispatch({ type: "RESTART" })} />;
+      default:
+        return null;
     }
   };
 
   return (
     <>
-      {state.screen > 0 && state.screen < 7 && (
+      {state.screen >= 1 && state.screen <= 6 && (
         <RunwayHeader state={state} currentScreen={state.screen} totalScreens={TOTAL_SCREENS} />
       )}
       <ScreenLayout screenKey={state.screen} hasHeader={state.screen > 0}>
