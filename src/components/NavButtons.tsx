@@ -8,13 +8,13 @@ interface Props {
   showBack?: boolean;
 }
 
-export function NavButtons({ onNext, onBack, nextLabel = "next →", nextDisabled = false, showBack = true }: Props) {
+export function NavButtons({ onNext, onBack, nextLabel = "continue", nextDisabled = false, showBack = true }: Props) {
   return (
-    <div className="flex items-center justify-between w-full max-w-md mx-auto mt-8 mb-6">
+    <div className="flex items-center justify-between w-full mt-8 mb-4">
       {showBack && onBack ? (
         <button
           onClick={onBack}
-          className="text-sm text-muted hover:text-heading transition-colors cursor-pointer"
+          className="text-sm text-text-tertiary hover:text-text-primary transition-colors cursor-pointer"
         >
           ← back
         </button>
@@ -22,13 +22,13 @@ export function NavButtons({ onNext, onBack, nextLabel = "next →", nextDisable
 
       {onNext && (
         <motion.button
-          whileHover={!nextDisabled ? { scale: 1.05 } : {}}
-          whileTap={!nextDisabled ? { scale: 0.95 } : {}}
+          whileHover={!nextDisabled ? { scale: 1.02 } : {}}
+          whileTap={!nextDisabled ? { scale: 0.98 } : {}}
           onClick={nextDisabled ? undefined : onNext}
-          className={`px-8 py-3 rounded-full font-display font-semibold text-white text-lg cursor-pointer transition-all duration-200 ${
+          className={`px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-all duration-150 ${
             nextDisabled
-              ? "bg-muted cursor-not-allowed opacity-50"
-              : "bg-gradient-to-r from-accent-orange to-accent-pink hover:shadow-lg hover:shadow-accent-pink/25"
+              ? "bg-surface text-text-tertiary cursor-not-allowed"
+              : "bg-accent text-white hover:bg-accent/90"
           }`}
         >
           {nextLabel}

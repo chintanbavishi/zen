@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import type { GameState, GameAction, OfficeOption } from "../engine/gameState";
+import type { GameState, GameAction } from "../engine/gameState";
 import { NavButtons } from "../components/NavButtons";
 
 interface Props {
@@ -9,89 +9,49 @@ interface Props {
   onBack: () => void;
 }
 
-const officeColors: Record<string, string> = {
-  apartment: "bg-card-yellow",
-  coworking: "bg-card-mint",
-  real_office: "bg-card-blue",
-  bangalore: "bg-card-peach",
-  garage: "bg-card-yellow",
-};
-
-const officeSelectedColors: Record<string, string> = {
-  apartment: "bg-yellow-100",
-  coworking: "bg-emerald-100",
-  real_office: "bg-blue-100",
-  bangalore: "bg-orange-100",
-  garage: "bg-yellow-100",
-};
-
-function OfficeCard({ office, dispatch, index }: { office: OfficeOption; dispatch: React.Dispatch<GameAction>; index: number }) {
-  const selected = office.selected;
-  const bgBase = officeColors[office.id] ?? "bg-card-blue";
-  const bgSel = officeSelectedColors[office.id] ?? "bg-blue-100";
-
-  return (
-    <motion.button
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.07, duration: 0.3 }}
-      onClick={() => dispatch({ type: "TOGGLE_OFFICE", payload: office.id })}
-      className={`w-full rounded-2xl p-5 text-left cursor-pointer transition-all duration-200 hover:scale-[1.03] shadow-sm ${
-        selected ? `${bgSel} ring-2 ring-accent-violet` : bgBase
-      }`}
-    >
-      <div className="flex items-center gap-3 mb-2">
-        <span className="text-2xl">{office.emoji}</span>
-        <span className="font-display font-bold text-heading text-lg lowercase flex-1">{office.name}</span>
-        {selected && (
-          <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-accent-violet font-bold">
-            ✓
-          </motion.span>
-        )}
-      </div>
-      <p className="text-body text-sm lowercase leading-relaxed mb-2">{office.description}</p>
-      <div className="font-mono font-bold text-sm">
-        {office.monthlyCost === 0 ? (
-          <span className="text-money-green">free 🎉</span>
-        ) : (
-          <span className="text-money-amber">
-            ${office.monthlyCost.toLocaleString()}/mo
-            {office.perPerson && <span className="text-muted font-normal"> per person</span>}
-          </span>
-        )}
-      </div>
-    </motion.button>
-  );
-}
-
 export function ScreenOffice({ state, dispatch, onNext, onBack }: Props) {
-  const selectedCount = state.offices.filter((o) => o.selected).length;
-
   return (
     <div className="flex flex-col flex-1">
-      <div className="mt-4 mb-6">
-        <h1 className="text-3xl font-display font-bold text-heading lowercase mb-2">
-          where does the magic happen?
-        </h1>
-        <p className="text-muted text-sm lowercase">
-          pick your HQ. or don't. vibes are free.
-          {selectedCount > 0 && (
-            <span className="ml-2 text-accent-violet font-bold">{selectedCount} selected</span>
-          )}
-        </p>
+      <div className="mt-6 mb-6">
+        <h1 className="text-2xl font-semibold text-text-primary mb-2">where do you work?</h1>
+        <p className="text-sm text-text-tertiary">select all that apply</p>
       </div>
 
-      <div className="flex flex-col gap-4 flex-1">
-        {state.offices.map((office, i) => (
-          <OfficeCard key={office.id} office={office} dispatch={dispatch} index={i} />
+      <div className="flex flex-col gap-2 flex-1">
+        {state.offices.map((o, i) => (
+          <motion.button
+            key={o.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+            onClick={() => dispatch({ type: "TOGGLE_OFFICE", payload: o.id })}
+            className={`w-full text-left rounded-xl p-4 cursor-pointer transition-all duration-150 border flex items-center gap-4 ${
+              o.selected
+                ? "bg-accent-dim border-accent/30"
+                : "bg-surface border-border hover:bg-surface-hover hover:border-border-hover"
+            }`}
+          >
+            <span className="text-lg">{o.emoji}</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-text-primary">{o.name}</div>
+              <div className="text-xs text-text-tertiary truncate">{o.description}</div>
+            </div>
+            <div className="shrink-0 text-right">
+              {o.monthlyCost === 0 ? (
+                <span className="text-xs font-mono text-green">$0</span>
+              ) : (
+                <span className="text-xs font-mono text-text-secondary">
+                  ${o.monthlyCost.toLocaleString()}/mo
+                  {o.perPerson && <span className="text-text-tertiary"> × hd</span>}
+                </span>
+              )}
+              {o.selected && <div className="text-accent text-[10px] mt-0.5">●</div>}
+            </div>
+          </motion.button>
         ))}
       </div>
 
-      <NavButtons
-        onNext={onNext}
-        onBack={onBack}
-        nextDisabled={false}
-      />
+      <NavButtons onNext={onNext} onBack={onBack} />
     </div>
   );
 }

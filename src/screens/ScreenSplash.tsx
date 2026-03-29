@@ -7,62 +7,51 @@ interface Props {
 }
 
 export function ScreenSplash({ onStart }: Props) {
-  const [showText, setShowText] = useState(false);
-  const [showButton, setShowButton] = useState(false);
-  const count = useCountUp(250000, 1500); // Fast count-up — exciting!
+  const [phase, setPhase] = useState(0);
+  const count = useCountUp(250000, 1200);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setShowText(true), 1800);
-    const t2 = setTimeout(() => setShowButton(true), 2500);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    const t1 = setTimeout(() => setPhase(1), 1500);
+    const t2 = setTimeout(() => setPhase(2), 2200);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-5 text-center">
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="flex flex-col items-center gap-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="flex flex-col items-center"
       >
-        <p className="text-lg text-muted font-sans lowercase tracking-wide">
-          congratulations. you just raised
+        <p className="text-xs font-mono text-text-tertiary tracking-widest uppercase mb-6">
+          incoming wire transfer
         </p>
 
-        <div className="font-mono font-bold text-heading text-6xl sm:text-8xl tabular-nums">
+        <div className="font-mono font-bold text-5xl sm:text-7xl tabular-nums text-text-primary mb-8">
           ${count.toLocaleString()}
         </div>
 
-        {showText && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
+        {phase >= 1 && (
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="flex flex-col items-center gap-2 max-w-xs"
+            className="text-text-secondary text-sm max-w-sm leading-relaxed mb-10"
           >
-            <p className="text-body text-base lowercase">
-              seed round. pre-product. pre-revenue.
-            </p>
-            <p className="text-muted text-sm lowercase">
-              now comes the fun part — spending it.
-            </p>
-          </motion.div>
+            y combinator just wired you $250,000. you have 18 months to prove you deserve more.
+          </motion.p>
         )}
 
-        {showButton && (
+        {phase >= 2 && (
           <motion.button
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onStart}
-            className="mt-4 px-10 py-4 rounded-full font-display font-semibold text-white text-xl cursor-pointer transition-all duration-200 bg-gradient-to-r from-accent-orange to-accent-pink hover:shadow-lg hover:shadow-accent-pink/25 shadow-md"
+            className="px-8 py-3 rounded-lg bg-accent text-white text-sm font-medium cursor-pointer hover:bg-accent/90 transition-all"
           >
-            let's burn 🔥
+            let's burn →
           </motion.button>
         )}
       </motion.div>

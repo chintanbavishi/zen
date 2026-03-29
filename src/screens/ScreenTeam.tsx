@@ -10,163 +10,98 @@ interface Props {
   onBack: () => void;
 }
 
-function TeamCard({
-  member,
-  dispatch,
-  b2bAvailable,
-  index,
-}: {
-  member: TeamMember;
-  dispatch: React.Dispatch<GameAction>;
-  b2bAvailable: boolean;
-  index: number;
-}) {
-  const [editingSalary, setEditingSalary] = useState(false);
-  const [salaryInput, setSalaryInput] = useState(String(member.salary));
+function TeamRow({ member, dispatch, b2bAvailable, index }: { member: TeamMember; dispatch: React.Dispatch<GameAction>; b2bAvailable: boolean; index: number }) {
+  const [editing, setEditing] = useState(false);
+  const [input, setInput] = useState(String(member.salary));
+  const disabled = member.b2bOnly && !b2bAvailable;
 
-  const isDisabled = member.b2bOnly && !b2bAvailable;
-  const total = member.count * member.salary;
-
-  function handleSalaryBlur() {
-    const parsed = parseInt(salaryInput, 10);
-    if (!isNaN(parsed) && parsed >= 0) {
-      dispatch({ type: "SET_TEAM_SALARY", payload: { id: member.id, salary: parsed } });
-    } else {
-      setSalaryInput(String(member.salary));
-    }
-    setEditingSalary(false);
-  }
-
-  function handleSalaryKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") handleSalaryBlur();
-    if (e.key === "Escape") {
-      setSalaryInput(String(member.salary));
-      setEditingSalary(false);
-    }
+  function commitSalary() {
+    const v = parseInt(input, 10);
+    if (!isNaN(v) && v >= 0) dispatch({ type: "SET_TEAM_SALARY", payload: { id: member.id, salary: v } });
+    else setInput(String(member.salary));
+    setEditing(false);
   }
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06, duration: 0.3 }}
-      className={`bg-surface rounded-2xl p-4 shadow-sm transition-all duration-200 ${
-        isDisabled ? "opacity-40 pointer-events-none" : ""
-      } ${member.count > 0 ? "border-l-4 border-accent-violet" : "border-l-4 border-transparent"}`}
+      transition={{ delay: index * 0.04 }}
+      className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-150 ${
+        disabled ? "opacity-25 pointer-events-none border-border bg-transparent" :
+        member.count > 0 ? "border-accent/20 bg-accent-dim" : "border-border bg-surface hover:bg-surface-hover"
+      }`}
     >
-      {/* Header row */}
-      <div className="flex items-start gap-3 mb-3">
-        <span className="text-2xl mt-0.5">{member.emoji}</span>
-        <div className="flex-1 min-w-0">
-          <div className="font-display font-semibold text-heading text-sm lowercase leading-tight">
-            {member.role}
-          </div>
-          <p className="text-muted text-xs lowercase leading-snug mt-0.5">{member.description}</p>
+      <span className="text-lg shrink-0">{member.emoji}</span>
+
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium text-text-primary truncate">{member.role}</div>
+        <div className="text-xs text-text-tertiary truncate">{member.description}</div>
+        <div className="mt-1">
+          {editing ? (
+            <input
+              type="number"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onBlur={commitSalary}
+              onKeyDown={(e) => { if (e.key === "Enter") commitSalary(); if (e.key === "Escape") { setInput(String(member.salary)); setEditing(false); } }}
+              autoFocus
+              className="w-24 text-xs font-mono bg-bg border border-accent/40 rounded px-2 py-1 text-text-primary outline-none"
+            />
+          ) : (
+            <button onClick={() => { setEditing(true); setInput(String(member.salary)); }} className="text-xs font-mono text-text-secondary hover:text-accent cursor-pointer transition-colors">
+              ${member.salary.toLocaleString()}/mo
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Controls row */}
-      <div className="flex items-center justify-between gap-3">
-        {/* Salary */}
-        <div className="flex items-center gap-1.5">
-          {editingSalary ? (
-            <input
-              type="number"
-              value={salaryInput}
-              onChange={(e) => setSalaryInput(e.target.value)}
-              onBlur={handleSalaryBlur}
-              onKeyDown={handleSalaryKeyDown}
-              autoFocus
-              className="w-24 text-xs font-mono font-bold text-heading bg-bg border border-accent-violet rounded-lg px-2 py-1 outline-none"
-            />
-          ) : (
-            <button
-              onClick={() => { setEditingSalary(true); setSalaryInput(String(member.salary)); }}
-              className="text-xs font-mono font-bold text-heading cursor-pointer hover:text-accent-violet transition-colors flex items-center gap-1"
-            >
-              ${member.salary.toLocaleString()}/mo
-              <span className="text-muted text-xs">✏️</span>
-            </button>
-          )}
-        </div>
-
-        {/* Count controls */}
-        <div className="flex items-center gap-2">
-          {member.count > 0 && (
-            <span className="text-xs font-mono text-money-green font-bold">
-              ${total.toLocaleString()}/mo
-            </span>
-          )}
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => dispatch({ type: "SET_TEAM_COUNT", payload: { id: member.id, count: member.count - 1 } })}
-              disabled={member.count === 0}
-              className="w-8 h-8 rounded-full bg-bg border border-black/10 font-bold text-heading text-lg cursor-pointer hover:bg-card-lavender hover:border-accent-violet transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              −
-            </button>
-            <span className="w-5 text-center font-mono font-bold text-heading text-sm">
-              {member.count}
-            </span>
-            <button
-              onClick={() => dispatch({ type: "SET_TEAM_COUNT", payload: { id: member.id, count: member.count + 1 } })}
-              disabled={member.count >= 5}
-              className="w-8 h-8 rounded-full bg-bg border border-black/10 font-bold text-heading text-lg cursor-pointer hover:bg-card-lavender hover:border-accent-violet transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              +
-            </button>
-          </div>
-        </div>
+      <div className="flex items-center gap-2 shrink-0">
+        {member.count > 0 && (
+          <span className="text-xs font-mono text-green">${(member.count * member.salary).toLocaleString()}</span>
+        )}
+        <button
+          onClick={() => dispatch({ type: "SET_TEAM_COUNT", payload: { id: member.id, count: member.count - 1 } })}
+          disabled={member.count === 0}
+          className="w-7 h-7 rounded-md border border-border bg-surface text-text-secondary text-sm flex items-center justify-center cursor-pointer hover:bg-surface-hover disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+        >−</button>
+        <span className="w-5 text-center font-mono text-sm text-text-primary">{member.count}</span>
+        <button
+          onClick={() => dispatch({ type: "SET_TEAM_COUNT", payload: { id: member.id, count: member.count + 1 } })}
+          disabled={member.count >= 5}
+          className="w-7 h-7 rounded-md border border-border bg-surface text-text-secondary text-sm flex items-center justify-center cursor-pointer hover:bg-surface-hover disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+        >+</button>
       </div>
     </motion.div>
   );
 }
 
 export function ScreenTeam({ state, dispatch, onNext, onBack }: Props) {
-  const b2bAvailable = state.markets.includes("b2b");
-  const totalPeople = state.team.reduce((sum, t) => sum + t.count, 0);
-  const totalBurn = state.team.reduce((sum, t) => sum + t.salary * t.count, 0);
+  const b2b = state.markets.includes("b2b");
+  const total = state.team.reduce((s, t) => s + t.count, 0);
+  const burn = state.team.reduce((s, t) => s + t.salary * t.count, 0);
 
   return (
     <div className="flex flex-col flex-1">
-      <div className="mt-4 mb-6">
-        <h1 className="text-3xl font-display font-bold text-heading lowercase mb-2">
-          who's building this thing?
-        </h1>
-        <p className="text-muted text-sm lowercase">adjust headcount and salaries. try not to cry.</p>
+      <div className="mt-6 mb-6">
+        <h1 className="text-2xl font-semibold text-text-primary mb-2">who's building this?</h1>
+        <p className="text-sm text-text-tertiary">tap salaries to edit. max 5 per role.</p>
       </div>
 
-      <div className="flex flex-col gap-3 flex-1">
-        {state.team.map((member, i) => (
-          <TeamCard
-            key={member.id}
-            member={member}
-            dispatch={dispatch}
-            b2bAvailable={b2bAvailable}
-            index={i}
-          />
+      <div className="flex flex-col gap-2 flex-1">
+        {state.team.map((m, i) => (
+          <TeamRow key={m.id} member={m} dispatch={dispatch} b2bAvailable={b2b} index={i} />
         ))}
       </div>
 
-      {/* Summary */}
-      {totalPeople > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-5 p-4 rounded-2xl bg-card-lavender text-sm font-sans lowercase"
-        >
-          <span className="font-bold text-heading">team: </span>
-          <span className="font-mono font-bold text-heading">{totalPeople}</span>
-          <span className="text-body"> {totalPeople === 1 ? "person" : "people"} · </span>
-          <span className="font-mono font-bold text-money-amber">${totalBurn.toLocaleString()}/mo</span>
-        </motion.div>
+      {total > 0 && (
+        <div className="mt-4 py-3 px-4 rounded-lg border border-border bg-surface text-sm flex justify-between">
+          <span className="text-text-secondary">{total} {total === 1 ? "person" : "people"}</span>
+          <span className="font-mono text-amber">${burn.toLocaleString()}/mo</span>
+        </div>
       )}
 
-      <NavButtons
-        onNext={onNext}
-        onBack={onBack}
-        nextDisabled={false}
-      />
+      <NavButtons onNext={onNext} onBack={onBack} />
     </div>
   );
 }
