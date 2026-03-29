@@ -9,6 +9,7 @@ import { ScreenOffice } from "./screens/ScreenOffice";
 import { ScreenGrowth } from "./screens/ScreenGrowth";
 import { ScreenTemptation } from "./screens/ScreenTemptation";
 import { ScreenCurveball } from "./screens/ScreenCurveball";
+import { ScreenFastForward } from "./screens/ScreenFastForward";
 import type { BusinessType, TeamChoice, OfficeChoice, GrowthChoice, TemptationId, CurveballId } from "./engine/gameState";
 
 export default function App() {
@@ -44,6 +45,7 @@ export default function App() {
 
   const handleCurveball = (id: CurveballId, choice: "fix" | "ignore") => {
     dispatch({ type: "RESOLVE_CURVEBALL", payload: { id, choice } });
+    dispatch({ type: "RUN_SIMULATION" });
     advance();
   };
 
@@ -55,6 +57,13 @@ export default function App() {
     <ScreenGrowth key="growth" businessType={state.businessType ?? "b2c"} onChoose={handleGrowth} />,
     <ScreenTemptation key="tempt" onDone={handleTemptation} />,
     <ScreenCurveball key="curve" seed={state.cash} onResolve={handleCurveball} />,
+    <ScreenFastForward
+      key="ff"
+      events={state.monthEvents}
+      startingCash={state.cash}
+      monthlyBurn={state.monthlyBurn}
+      onDone={advance}
+    />,
   ];
 
   return (

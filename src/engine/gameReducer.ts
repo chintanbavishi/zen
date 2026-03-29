@@ -135,7 +135,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         arr: result.finalArr,
         mau: result.finalMau,
         customers: result.finalCustomers,
-        cash: result.finalCash,
         momGrowth: result.momGrowth,
         retention: result.retention,
         outcome: result.outcome,
