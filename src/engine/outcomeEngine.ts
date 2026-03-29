@@ -42,6 +42,11 @@ export function simulateGame(state: GameState): SimResult {
   const lifestyleRatio = lifestyleSpend / totalBudget;
   const headcount = state.team.reduce((s, t) => s + t.count, 0);
 
+  // Revenue model
+  const targetMRR = state.revenue.pricePerMonth * state.revenue.targetCustomers;
+  const hasRevenue = targetMRR > 0;
+  let currentMRR = 0;
+
   // Choice-based event generation
   const choiceEvents: { month: number; text: string; emoji: string }[] = [];
 
@@ -72,6 +77,16 @@ export function simulateGame(state: GameState): SimResult {
   if (state.offices.find((o) => o.id === "garage" && o.selected)) {
     choiceEvents.push({ month: 1, text: "working from parents' garage. dad keeps asking 'so what does it DO?'", emoji: "🚗" });
   }
+  if (hasRevenue && state.revenue.pricePerMonth > 0) {
+    const isB2B = state.markets.includes("b2b");
+    choiceEvents.push({ month: 2, text: isB2B ? "first demo booked. they asked for a discount before seeing the product." : "first paying user! they'll churn in 3 days but still.", emoji: "💰" });
+    if (targetMRR > 20000) {
+      choiceEvents.push({ month: 10, text: `MRR is climbing. $${Math.floor(targetMRR * 0.4).toLocaleString()}/mo. investors are 'intrigued'.`, emoji: "📈" });
+    }
+    if (targetMRR > 5000) {
+      choiceEvents.push({ month: 14, text: "revenue is real. you can taste the series A.", emoji: "🎯" });
+    }
+  }
 
   // Simulate months
   const genericEvents = [
@@ -94,6 +109,17 @@ export function simulateGame(state: GameState): SimResult {
     const teamBurnThisMonth = state.team.reduce((s, t) => s + (month <= t.months ? t.salary * t.count : 0), 0);
     const nonTeamBurn = monthlyBurn - state.team.reduce((s, t) => s + t.salary * t.count, 0);
     const burnThisMonth = teamBurnThisMonth + nonTeamBurn;
+
+    // Revenue ramps up — you don't hit target MRR on day 1
+    // Ramp: reach ~60% of target by month 9, ~90% by month 15, 100% by month 18
+    if (hasRevenue && hasEngineers) {
+      const rampFactor = Math.min(1, (month / TOTAL_MONTHS) * 1.2) * (0.5 + rand() * 0.5);
+      const newCustomersThisMonth = Math.floor(state.revenue.targetCustomers * rampFactor / TOTAL_MONTHS);
+      const revenueThisMonth = newCustomersThisMonth * state.revenue.pricePerMonth;
+      currentMRR += revenueThisMonth;
+      cash += currentMRR; // MRR offsets burn
+    }
+
     cash -= burnThisMonth;
 
     if (cash <= 0 && diedAtMonth === null) {
@@ -121,23 +147,30 @@ export function simulateGame(state: GameState): SimResult {
     }
   }
 
-  // Determine outcome
+  // Determine outcome — revenue model matters now
   let outcome: "raised" | "died";
   if (diedAtMonth !== null) {
     outcome = "died";
-  } else if (!hasGrowth) {
-    outcome = "died"; // No traction = no raise
-    if (diedAtMonth === null) diedAtMonth = TOTAL_MONTHS;
-  } else if (lifestyleRatio > MAX_LIFESTYLE_RATIO) {
-    outcome = "died"; // Spent too much on lifestyle
-    if (diedAtMonth === null) diedAtMonth = TOTAL_MONTHS;
   } else if (!hasEngineers) {
-    outcome = "died"; // Nothing got built
-    if (diedAtMonth === null) diedAtMonth = TOTAL_MONTHS;
-  } else if (cash > MIN_RUNWAY_TO_SURVIVE && hasGrowth && hasEngineers) {
-    outcome = "raised";
+    outcome = "died";
+    diedAtMonth = TOTAL_MONTHS;
+  } else if (lifestyleRatio > MAX_LIFESTYLE_RATIO) {
+    outcome = "died";
+    diedAtMonth = TOTAL_MONTHS;
+  } else if (!hasGrowth && !hasRevenue) {
+    outcome = "died"; // No traction AND no revenue model = no raise
+    diedAtMonth = TOTAL_MONTHS;
+  } else if (cash > MIN_RUNWAY_TO_SURVIVE && currentMRR > 5000) {
+    outcome = "raised"; // Cash + real revenue = strong raise
+  } else if (cash > MIN_RUNWAY_TO_SURVIVE && hasGrowth && hasRevenue) {
+    outcome = "raised"; // Survived + growth + revenue plan
+  } else if (currentMRR > 10000) {
+    outcome = "raised"; // Revenue saves you even if cash is tight
+  } else if (cash > 0 && (hasGrowth || hasRevenue)) {
+    outcome = rand() > 0.4 ? "raised" : "died"; // coin flip with slight edge
   } else {
-    outcome = rand() > 0.5 ? "raised" : "died";
+    outcome = "died";
+    if (diedAtMonth === null) diedAtMonth = TOTAL_MONTHS;
   }
 
   // Categorize founder

@@ -8,6 +8,7 @@ export function initialState(): GameState {
     screen: 0,
     cash: STARTING_CASH,
     markets: [],
+    revenue: { pricePerMonth: 0, targetCustomers: 0 },
     team: initialTeam.map((t) => ({ ...t })),
     offices: initialOffices.map((o) => ({ ...o })),
     growth: initialGrowth.map((g) => ({ ...g })),
@@ -44,15 +45,40 @@ export function getOneTimeCosts(state: GameState): number {
   return growthOnetime + lifestyleOnetime + curveballCosts;
 }
 
+export function getTotalCommittedSpend(state: GameState): number {
+  // Team: salary × count × their contract months
+  const teamTotal = state.team.reduce((sum, t) => sum + t.salary * t.count * t.months, 0);
+  // Office/growth/lifestyle monthly costs × full 18 months
+  const headcount = state.team.reduce((sum, t) => sum + t.count, 0);
+  const officeTotal = state.offices
+    .filter((o) => o.selected)
+    .reduce((sum, o) => sum + (o.perPerson ? o.monthlyCost * Math.max(1, headcount) : o.monthlyCost) * TOTAL_MONTHS, 0);
+  const growthMonthlyTotal = state.growth.filter((g) => g.selected).reduce((sum, g) => sum + g.monthlyCost * TOTAL_MONTHS, 0);
+  const lifestyleMonthlyTotal = state.lifestyle.filter((l) => l.selected).reduce((sum, l) => sum + l.monthlyCost * TOTAL_MONTHS, 0);
+  return teamTotal + officeTotal + growthMonthlyTotal + lifestyleMonthlyTotal + getOneTimeCosts(state);
+}
+
 export function getRemainingCash(state: GameState): number {
-  return state.cash - getOneTimeCosts(state);
+  return Math.max(0, state.cash - getTotalCommittedSpend(state));
 }
 
 export function getRunwayMonths(state: GameState): number {
-  const remaining = getRemainingCash(state);
-  const burn = getMonthlyBurn(state);
-  if (burn <= 0) return TOTAL_MONTHS;
-  return Math.min(TOTAL_MONTHS, remaining / burn);
+  // Simulate month by month to get accurate runway with variable team durations
+  const headcount = state.team.reduce((sum, t) => sum + t.count, 0);
+  const officeBurn = state.offices
+    .filter((o) => o.selected)
+    .reduce((sum, o) => sum + (o.perPerson ? o.monthlyCost * Math.max(1, headcount) : o.monthlyCost), 0);
+  const growthBurn = state.growth.filter((g) => g.selected).reduce((sum, g) => sum + g.monthlyCost, 0);
+  const lifestyleBurn = state.lifestyle.filter((l) => l.selected).reduce((sum, l) => sum + l.monthlyCost, 0);
+  const fixedMonthly = officeBurn + growthBurn + lifestyleBurn;
+
+  let cash = state.cash - getOneTimeCosts(state);
+  for (let m = 1; m <= TOTAL_MONTHS; m++) {
+    const teamBurn = state.team.reduce((s, t) => s + (m <= t.months ? t.salary * t.count : 0), 0);
+    cash -= (teamBurn + fixedMonthly);
+    if (cash <= 0) return m - 1 + (cash + teamBurn + fixedMonthly > 0 ? (cash + teamBurn + fixedMonthly) / (teamBurn + fixedMonthly) : 0);
+  }
+  return TOTAL_MONTHS;
 }
 
 function pickCurveballs(state: GameState): typeof curveballPool {
@@ -69,9 +95,8 @@ function pickCurveballs(state: GameState): typeof curveballPool {
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case "TOGGLE_MARKET": {
-      const markets = state.markets.includes(action.payload)
-        ? state.markets.filter((m) => m !== action.payload)
-        : [...state.markets, action.payload];
+      // Single-select: set to this one, or deselect if already selected
+      const markets = state.markets.includes(action.payload) ? [] : [action.payload];
       return { ...state, markets };
     }
 
@@ -95,6 +120,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       );
       return { ...state, team };
     }
+
+    case "SET_REVENUE_PRICE":
+      return { ...state, revenue: { ...state.revenue, pricePerMonth: Math.max(0, action.payload) } };
+
+    case "SET_REVENUE_CUSTOMERS":
+      return { ...state, revenue: { ...state.revenue, targetCustomers: Math.max(0, action.payload) } };
 
     case "TOGGLE_OFFICE": {
       const offices = state.offices.map((o) =>
@@ -139,7 +170,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case "NEXT_SCREEN": {
       const next = state.screen + 1;
       // Generate curveballs when entering curveball screen (screen 6)
-      if (next === 6 && state.curveballs.length === 0) {
+      if (next === 7 && state.curveballs.length === 0) {
         return { ...state, screen: next, curveballs: pickCurveballs(state) };
       }
       return { ...state, screen: next };

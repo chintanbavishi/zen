@@ -63,10 +63,16 @@ export interface MonthEvent {
   moneyDelta: number;
 }
 
+export interface RevenueModel {
+  pricePerMonth: number;
+  targetCustomers: number;
+}
+
 export interface GameState {
   screen: number;
   cash: number;
   markets: MarketType[];
+  revenue: RevenueModel;
   team: TeamMember[];
   offices: OfficeOption[];
   growth: GrowthOption[];
@@ -85,6 +91,8 @@ export type GameAction =
   | { type: "SET_TEAM_COUNT"; payload: { id: string; count: number } }
   | { type: "SET_TEAM_SALARY"; payload: { id: string; salary: number } }
   | { type: "SET_TEAM_MONTHS"; payload: { id: string; months: number } }
+  | { type: "SET_REVENUE_PRICE"; payload: number }
+  | { type: "SET_REVENUE_CUSTOMERS"; payload: number }
   | { type: "TOGGLE_OFFICE"; payload: string }
   | { type: "TOGGLE_GROWTH"; payload: string }
   | { type: "TOGGLE_LIFESTYLE"; payload: string }

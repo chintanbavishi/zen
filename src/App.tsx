@@ -7,13 +7,14 @@ import { ScreenMarket } from "./screens/ScreenMarket";
 import { ScreenTeam } from "./screens/ScreenTeam";
 import { ScreenOffice } from "./screens/ScreenOffice";
 import { ScreenGrowth } from "./screens/ScreenGrowth";
+import { ScreenRevenue } from "./screens/ScreenRevenue";
 import { ScreenLifestyle } from "./screens/ScreenLifestyle";
 import { ScreenCurveball } from "./screens/ScreenCurveball";
 import { ScreenFastForward } from "./screens/ScreenFastForward";
 import { ScreenVerdict } from "./screens/ScreenVerdict";
 import { ScreenShare } from "./screens/ScreenShare";
 
-const TOTAL_SCREENS = 10;
+const TOTAL_SCREENS = 11;
 
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, undefined, initialState);
@@ -34,10 +35,12 @@ export default function App() {
       case 4:
         return <ScreenGrowth state={state} dispatch={dispatch} onNext={next} onBack={back} />;
       case 5:
-        return <ScreenLifestyle state={state} dispatch={dispatch} onNext={next} onBack={back} />;
+        return <ScreenRevenue state={state} dispatch={dispatch} onNext={next} onBack={back} />;
       case 6:
-        return <ScreenCurveball state={state} dispatch={dispatch} onNext={next} onBack={back} />;
+        return <ScreenLifestyle state={state} dispatch={dispatch} onNext={next} onBack={back} />;
       case 7:
+        return <ScreenCurveball state={state} dispatch={dispatch} onNext={next} onBack={back} />;
+      case 8:
         return (
           <ScreenFastForward
             state={state}
@@ -47,9 +50,9 @@ export default function App() {
             }}
           />
         );
-      case 8:
-        return <ScreenVerdict state={state} onContinue={next} />;
       case 9:
+        return <ScreenVerdict state={state} onContinue={next} />;
+      case 10:
         return <ScreenShare state={state} onRestart={() => dispatch({ type: "RESTART" })} />;
       default:
         return null;
@@ -58,7 +61,7 @@ export default function App() {
 
   return (
     <>
-      {state.screen >= 1 && state.screen <= 6 && (
+      {state.screen >= 1 && state.screen <= 7 && (
         <RunwayHeader state={state} currentScreen={state.screen} totalScreens={TOTAL_SCREENS} />
       )}
       <ScreenLayout screenKey={state.screen} hasHeader={state.screen > 0}>
