@@ -7,14 +7,14 @@ describe("gameReducer", () => {
     expect(state.cash).toBe(250_000);
   });
 
-  it("TOGGLE_MARKET adds/removes market", () => {
+  it("TOGGLE_MARKET single-selects market", () => {
     let state = initialState();
     state = gameReducer(state, { type: "TOGGLE_MARKET", payload: "b2c" });
     expect(state.markets).toEqual(["b2c"]);
     state = gameReducer(state, { type: "TOGGLE_MARKET", payload: "b2b" });
-    expect(state.markets).toEqual(["b2c", "b2b"]);
-    state = gameReducer(state, { type: "TOGGLE_MARKET", payload: "b2c" });
     expect(state.markets).toEqual(["b2b"]);
+    state = gameReducer(state, { type: "TOGGLE_MARKET", payload: "b2b" });
+    expect(state.markets).toEqual([]);
   });
 
   it("SET_TEAM_COUNT updates headcount", () => {

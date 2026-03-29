@@ -76,7 +76,7 @@ export function ScreenFastForward({ state, onDone }: Props) {
           {!done && <p className="text-[10px] text-text-tertiary mt-2">tap to skip</p>}
         </div>
 
-        <div className="flex-1 overflow-y-auto scrollbar-thin">
+        <div className="max-h-[50vh] overflow-y-auto scrollbar-thin">
           <AnimatePresence>
             {events.slice(0, revealed).map((ev, i) => {
               const c = cashAt(i);
@@ -99,7 +99,7 @@ export function ScreenFastForward({ state, onDone }: Props) {
         </div>
 
         {showBtn && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-6 flex justify-center">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-8 flex justify-center">
             <button onClick={onDone} className="px-6 py-2.5 rounded-lg bg-accent text-white text-sm font-medium cursor-pointer hover:bg-accent/90 transition-all">
               see the verdict →
             </button>
