@@ -1,52 +1,93 @@
-export type BusinessType = "b2b" | "b2c";
-export type TeamChoice = "cto_friend" | "senior" | "offshore" | "solo";
-export type OfficeChoice = "apartment" | "wework" | "real_office" | "bangalore";
-export type B2CGrowth = "organic" | "paid_ads" | "influencer" | "pr_stunt";
-export type B2BGrowth = "cold_email" | "sales_rep" | "content" | "network";
-export type GrowthChoice = B2CGrowth | B2BGrowth;
-export type TemptationId = "lisbon" | "rebrand" | "sxsw" | "merch";
-export type CurveballId = "cto_equity" | "aws_bill" | "refund" | "competitor" | "pivot";
+export type MarketType = "b2b" | "b2c";
+
+export interface TeamMember {
+  id: string;
+  role: string;
+  emoji: string;
+  description: string;
+  defaultSalary: number;
+  salary: number;
+  count: number;
+  b2bOnly?: boolean;
+}
+
+export interface OfficeOption {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+  monthlyCost: number;
+  perPerson?: boolean;
+  selected: boolean;
+}
+
+export interface GrowthOption {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+  monthlyCost: number;
+  oneTimeCost: number;
+  selected: boolean;
+  market: "b2b" | "b2c" | "both";
+}
+
+export interface LifestyleItem {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+  monthlyCost: number;
+  oneTimeCost: number;
+  selected: boolean;
+}
+
+export interface CurveballEvent {
+  id: string;
+  text: string;
+  emoji: string;
+  optionA: { label: string; cost: number; effect: string };
+  optionB: { label: string; cost: number; effect: string };
+}
+
+export interface CurveballResponse {
+  id: string;
+  choice: "a" | "b";
+}
 
 export interface MonthEvent {
   month: number;
   text: string;
-  mrrDelta?: number;
-  mauDelta?: number;
-  cashDelta?: number;
+  emoji: string;
+  moneyDelta: number;
 }
 
 export interface GameState {
   screen: number;
   cash: number;
-  monthlyBurn: number;
-  monthsTotal: number;
-  runwayMonths: number;
-  businessType: BusinessType | null;
-  teamChoice: TeamChoice | null;
-  officeChoice: OfficeChoice | null;
-  growthChoice: GrowthChoice | null;
-  temptationsAccepted: TemptationId[];
-  curveballId: CurveballId | null;
-  curveballResolution: "fix" | "ignore" | null;
-  mrr: number;
-  arr: number;
-  mau: number;
-  customers: number;
-  momGrowth: number;
-  retention: number;
+  markets: MarketType[];
+  team: TeamMember[];
+  offices: OfficeOption[];
+  growth: GrowthOption[];
+  lifestyle: LifestyleItem[];
+  curveballs: CurveballEvent[];
+  curveballResponses: CurveballResponse[];
   monthEvents: MonthEvent[];
   outcome: "raised" | "died" | null;
-  easterEgg: string | null;
+  diedAtMonth: number | null;
+  founderType: string | null;
+  burnEfficiency: number;
 }
 
 export type GameAction =
-  | { type: "SET_TYPE"; payload: BusinessType }
-  | { type: "SET_TEAM"; payload: TeamChoice }
-  | { type: "SET_OFFICE"; payload: OfficeChoice }
-  | { type: "SET_GROWTH"; payload: GrowthChoice }
-  | { type: "ACCEPT_TEMPTATION"; payload: TemptationId }
-  | { type: "SKIP_TEMPTATION"; payload: TemptationId }
-  | { type: "RESOLVE_CURVEBALL"; payload: { id: CurveballId; choice: "fix" | "ignore" } }
+  | { type: "TOGGLE_MARKET"; payload: MarketType }
+  | { type: "SET_TEAM_COUNT"; payload: { id: string; count: number } }
+  | { type: "SET_TEAM_SALARY"; payload: { id: string; salary: number } }
+  | { type: "TOGGLE_OFFICE"; payload: string }
+  | { type: "TOGGLE_GROWTH"; payload: string }
+  | { type: "TOGGLE_LIFESTYLE"; payload: string }
+  | { type: "RESPOND_CURVEBALL"; payload: CurveballResponse }
   | { type: "RUN_SIMULATION" }
   | { type: "NEXT_SCREEN" }
+  | { type: "PREV_SCREEN" }
   | { type: "RESTART" };

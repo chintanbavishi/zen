@@ -1,259 +1,207 @@
-import type { TeamChoice, OfficeChoice, B2CGrowth, B2BGrowth, TemptationId, CurveballId } from "./gameState";
+import type { TeamMember, OfficeOption, GrowthOption, LifestyleItem, CurveballEvent } from "./gameState";
 
-export interface TeamOption {
-  id: TeamChoice;
-  title: string;
-  subtitle: string;
-  icon: string;
-  monthlyCost: number;
-  oneTimeCost: number;
-}
-
-export interface OfficeOption {
-  id: OfficeChoice;
-  title: string;
-  subtitle: string;
-  icon: string;
-  monthlyCost: number;
-  oneTimeCost: number;
-}
-
-export interface GrowthOption<T extends string> {
-  id: T;
-  title: string;
-  subtitle: string;
-  icon: string;
-  monthlyCost: number;
-  oneTimeCost: number;
-}
-
-export interface TemptationOption {
-  id: TemptationId;
-  title: string;
-  subtitle: string;
-  icon: string;
-  cost: number;
-}
-
-export interface CurveballOption {
-  id: CurveballId;
-  title: string;
-  subtitle: string;
-  icon: string;
-  fixCost: number;
-  ignoreText: string;
-}
-
-export const teamChoices: TeamOption[] = [
+export const initialTeam: TeamMember[] = [
   {
-    id: "cto_friend",
-    title: "CTO Friend",
-    subtitle: "$0 cash, 25% equity. writes code at 2am. will have a breakdown by month 9.",
-    icon: "🤝",
-    monthlyCost: 0,
-    oneTimeCost: 0,
+    id: "cofounder",
+    role: "Co-founder (technical)",
+    emoji: "👨‍💻",
+    description: "works for free. for now. expect the 'let's revisit equity' talk by month 3.",
+    defaultSalary: 0,
+    salary: 0,
+    count: 0,
   },
   {
-    id: "senior",
-    title: "Senior Engineer",
-    subtitle: "$12K/mo. wants health insurance. actually knows what they're doing.",
-    icon: "👨‍💻",
-    monthlyCost: 12_000,
-    oneTimeCost: 0,
+    id: "senior_eng",
+    role: "Senior Engineer",
+    emoji: "🧑‍💻",
+    description: "expensive but actually ships. will argue about architecture for 2 weeks first.",
+    defaultSalary: 12000,
+    salary: 12000,
+    count: 0,
+  },
+  {
+    id: "junior_eng",
+    role: "Junior Engineer",
+    emoji: "💻",
+    description: "cheap and eager. mass-produces bugs faster than features.",
+    defaultSalary: 6000,
+    salary: 6000,
+    count: 0,
   },
   {
     id: "offshore",
-    title: "Offshore Team",
-    subtitle: "$8K/mo total. timezone hell, but you ship fast.",
-    icon: "🌏",
-    monthlyCost: 8_000,
-    oneTimeCost: 0,
+    role: "Offshore Dev Team (3 pack)",
+    emoji: "🌏",
+    description: "timezone roulette. your 9am standup is their midnight crisis.",
+    defaultSalary: 7500,
+    salary: 7500,
+    count: 0,
   },
   {
-    id: "solo",
-    title: "Solo Founder",
-    subtitle: "$0. you are the engineer, the designer, the PM, and the therapist.",
-    icon: "🧘",
-    monthlyCost: 0,
-    oneTimeCost: 0,
+    id: "designer",
+    role: "Designer",
+    emoji: "🎨",
+    description: "will redesign the logo 14 times before touching the actual product.",
+    defaultSalary: 9000,
+    salary: 9000,
+    count: 0,
+  },
+  {
+    id: "marketing",
+    role: "Marketing / Growth",
+    emoji: "📈",
+    description: "will say 'we need to build a community' in the first meeting.",
+    defaultSalary: 8000,
+    salary: 8000,
+    count: 0,
+  },
+  {
+    id: "sales",
+    role: "Sales Rep",
+    emoji: "🤝",
+    description: "will call themselves 'head of revenue' by week 2.",
+    defaultSalary: 7000,
+    salary: 7000,
+    count: 0,
+    b2bOnly: true,
+  },
+  {
+    id: "intern",
+    role: "Intern",
+    emoji: "🎒",
+    description: "will build your MVP from their dorm room. might accidentally mass resign your prod db.",
+    defaultSalary: 2000,
+    salary: 2000,
+    count: 0,
   },
 ];
 
-export const officeChoices: OfficeOption[] = [
+export const initialOffices: OfficeOption[] = [
   {
     id: "apartment",
-    title: "Home / Apartment",
-    subtitle: "$0/mo. your cofounder's cat is on every zoom call.",
-    icon: "🏠",
+    name: "Your apartment",
+    emoji: "🏠",
+    description: "your cofounder's cat will attend every investor call",
     monthlyCost: 0,
-    oneTimeCost: 0,
+    selected: false,
   },
   {
-    id: "wework",
-    title: "WeWork",
-    subtitle: "$600/mo. free beer on tap. you'll network with 14 crypto bros.",
-    icon: "☕",
+    id: "coworking",
+    name: "Coworking hot desk",
+    emoji: "☕",
+    description: "free kombucha. you'll network with 14 crypto bros and a life coach",
     monthlyCost: 600,
-    oneTimeCost: 0,
+    perPerson: true,
+    selected: false,
   },
   {
     id: "real_office",
-    title: "Real Office",
-    subtitle: "$4,500/mo. SF rent hits different. but investors love walking into a 'space'.",
-    icon: "🏢",
-    monthlyCost: 4_500,
-    oneTimeCost: 0,
+    name: "A real office (SF/NYC)",
+    emoji: "🏢",
+    description: "investors love walking into a 'space'. your bank account doesn't",
+    monthlyCost: 4500,
+    selected: false,
   },
   {
     id: "bangalore",
-    title: "Bangalore Hub",
-    subtitle: "$800/mo. burn rate drops 60%. good luck with those SF investor meetings.",
-    icon: "🇮🇳",
+    name: "Bangalore / Remote hub",
+    emoji: "🇮🇳",
+    description: "70% cheaper. 100% harder to explain to your SF-based investors",
     monthlyCost: 800,
-    oneTimeCost: 0,
+    selected: false,
+  },
+  {
+    id: "garage",
+    name: "Your parents' garage",
+    emoji: "🚗",
+    description: "the Steve Jobs origin story. minus the Steve Jobs part",
+    monthlyCost: 0,
+    selected: false,
   },
 ];
 
-export const b2cGrowthChoices: GrowthOption<B2CGrowth>[] = [
-  {
-    id: "organic",
-    title: "Organic Growth",
-    subtitle: "Word of mouth. SEO. Hope. The holy trinity.",
-    icon: "🌱",
-    monthlyCost: 0,
-    oneTimeCost: 0,
-  },
-  {
-    id: "paid_ads",
-    title: "Paid Ads",
-    subtitle: "$5K/mo in Facebook ads. Your CAC will haunt your dreams.",
-    icon: "📢",
-    monthlyCost: 5_000,
-    oneTimeCost: 0,
-  },
-  {
-    id: "influencer",
-    title: "Influencer Deal",
-    subtitle: "$15K one-time. One TikTok. Millions of views. Zero conversions.",
-    icon: "⭐",
-    monthlyCost: 0,
-    oneTimeCost: 15_000,
-  },
-  {
-    id: "pr_stunt",
-    title: "PR Stunt",
-    subtitle: "$2K one-time. Goes viral once. Then silence.",
-    icon: "🎪",
-    monthlyCost: 0,
-    oneTimeCost: 2_000,
-  },
+export const initialGrowth: GrowthOption[] = [
+  // B2C
+  { id: "organic", name: "Organic / Viral loops", emoji: "🔄", description: "free if you're creative. you're probably not that creative", monthlyCost: 0, oneTimeCost: 0, selected: false, market: "b2c" },
+  { id: "meta_ads", name: "Meta + Google Ads", emoji: "💸", description: "throwing money into zuck's pocket and praying", monthlyCost: 5000, oneTimeCost: 0, selected: false, market: "b2c" },
+  { id: "tiktok", name: "TikTok content machine", emoji: "🎬", description: "hire a 19-year-old. give them the company account. pray", monthlyCost: 3000, oneTimeCost: 0, selected: false, market: "b2c" },
+  { id: "influencer", name: "Influencer sponsorship", emoji: "🤳", description: "they'll mispronounce your company name but get 2M views", monthlyCost: 0, oneTimeCost: 8000, selected: false, market: "b2c" },
+  { id: "producthunt", name: "Product Hunt launch", emoji: "🚀", description: "you mass-email your entire network at 12:01am PST", monthlyCost: 0, oneTimeCost: 0, selected: false, market: "b2c" },
+  { id: "pr", name: "PR / press push", emoji: "📰", description: "a TechCrunch article that 300 people will read and screenshot", monthlyCost: 0, oneTimeCost: 5000, selected: false, market: "b2c" },
+  // B2B
+  { id: "cold_email", name: "Cold email grind", emoji: "📧", description: "become a LinkedIn creature. embrace it", monthlyCost: 500, oneTimeCost: 0, selected: false, market: "b2b" },
+  { id: "conferences", name: "Conference circuit", emoji: "🎪", description: "$200 coffee chats with people who 'love what you're building'", monthlyCost: 3000, oneTimeCost: 0, selected: false, market: "b2b" },
+  { id: "content_mkt", name: "Content marketing", emoji: "✍️", description: "write blog posts. 47 people read them. 2 of them are bots", monthlyCost: 2000, oneTimeCost: 0, selected: false, market: "b2b" },
+  { id: "sdr", name: "Outbound SDR", emoji: "📞", description: "this person will book 3 demos in month 1 and call it a pipeline", monthlyCost: 6000, oneTimeCost: 0, selected: false, market: "b2b" },
+  { id: "partners", name: "Partner / channel deals", emoji: "🤝", description: "'let's do a co-marketing thing' — the email that goes nowhere", monthlyCost: 0, oneTimeCost: 0, selected: false, market: "b2b" },
 ];
 
-export const b2bGrowthChoices: GrowthOption<B2BGrowth>[] = [
-  {
-    id: "cold_email",
-    title: "Cold Email",
-    subtitle: "$500/mo for Apollo. 0.3% reply rate. But every reply is a potential $10K deal.",
-    icon: "📧",
-    monthlyCost: 500,
-    oneTimeCost: 0,
-  },
-  {
-    id: "sales_rep",
-    title: "Sales Rep",
-    subtitle: "$8K/mo. They close deals. And take credit for deals you already closed.",
-    icon: "💼",
-    monthlyCost: 8_000,
-    oneTimeCost: 0,
-  },
-  {
-    id: "content",
-    title: "Content Marketing",
-    subtitle: "$2K/mo. Blog posts. LinkedIn. Takes 6 months to see results.",
-    icon: "✍️",
-    monthlyCost: 2_000,
-    oneTimeCost: 0,
-  },
-  {
-    id: "network",
-    title: "Network / Referrals",
-    subtitle: "$0. Calling in favors. The original growth hack.",
-    icon: "🤙",
-    monthlyCost: 0,
-    oneTimeCost: 0,
-  },
+export const initialLifestyle: LifestyleItem[] = [
+  { id: "design_sprint", name: "Design sprint week", emoji: "🎨", description: "3 days of sticky notes to arrive at the idea you had on day 1", monthlyCost: 0, oneTimeCost: 5000, selected: false },
+  { id: "offsite", name: "Company offsite in Goa", emoji: "🏖️", description: "team bonding. someone will cry. someone will quit within 2 weeks", monthlyCost: 0, oneTimeCost: 8000, selected: false },
+  { id: "vests", name: "Matching Patagonia vests", emoji: "🧥", description: "nothing says 'we're a real company' like identical fleece", monthlyCost: 0, oneTimeCost: 2500, selected: false },
+  { id: "influencer_tweet", name: "Pay an influencer to tweet", emoji: "🐦", description: "they'll post once, tag the wrong handle, and never respond again", monthlyCost: 0, oneTimeCost: 3000, selected: false },
+  { id: "tools", name: "Premium Figma + Notion + Linear + Slack", emoji: "🧰", description: "the startup starter pack. you'll use 10% of each tool", monthlyCost: 800, oneTimeCost: 0, selected: false },
+  { id: "sf_trip", name: "Fly to SF for 'investor meetings'", emoji: "✈️", description: "2 actual meetings. 5 dinners. 1 existential crisis at Dolores Park", monthlyCost: 0, oneTimeCost: 4000, selected: false },
+  { id: "branding", name: "Hire a branding agency", emoji: "🎯", description: "they'll present 3 logos. you'll pick the one your mom likes", monthlyCost: 0, oneTimeCost: 15000, selected: false },
+  { id: "ai_tools", name: "AI tools subscription spree", emoji: "🤖", description: "ChatGPT Plus, Claude Pro, Midjourney, Cursor — you're an AI company now", monthlyCost: 500, oneTimeCost: 0, selected: false },
+  { id: "desks", name: "Standing desks for everyone", emoji: "🪑", description: "health is wealth. your bank balance disagrees", monthlyCost: 0, oneTimeCost: 3000, selected: false },
+  { id: "domain", name: "Custom domain that costs too much", emoji: "🌐", description: "burn.money was $2K. was it worth it? absolutely", monthlyCost: 0, oneTimeCost: 2000, selected: false },
+  { id: "photographer", name: "Startup photographer", emoji: "📸", description: "professional headshots for your 4-person team. LinkedIn will love it", monthlyCost: 0, oneTimeCost: 1500, selected: false },
+  { id: "lunches", name: "Friday team lunches", emoji: "🍕", description: "'culture building' that's really just pizza every week", monthlyCost: 1200, oneTimeCost: 0, selected: false },
+  { id: "pitch_deck", name: "Pitch deck designer", emoji: "📊", description: "because your Google Slides wasn't cutting it (it was fine)", monthlyCost: 0, oneTimeCost: 3000, selected: false },
+  { id: "sxsw", name: "SXSW / Web Summit booth", emoji: "🎪", description: "200 email signups, 0 conversions, 1 legendary hangover", monthlyCost: 0, oneTimeCost: 12000, selected: false },
+  { id: "merch", name: "Company merch nobody asked for", emoji: "👕", description: "hoodies, stickers, tote bags. your mom is your biggest customer", monthlyCost: 0, oneTimeCost: 2000, selected: false },
 ];
 
-export const temptations: TemptationOption[] = [
+export const curveballPool: CurveballEvent[] = [
   {
-    id: "lisbon",
-    title: "Workation in Lisbon",
-    subtitle: "It's a business trip. Kind of. The Atlantic sunsets are crucial for creativity.",
-    icon: "🇵🇹",
-    cost: 3_500,
-  },
-  {
-    id: "rebrand",
-    title: "Emergency Rebrand",
-    subtitle: "Your logo needed gradients. Non-negotiable. $8K well spent.",
-    icon: "🎨",
-    cost: 8_000,
-  },
-  {
-    id: "sxsw",
-    title: "SXSW Booth",
-    subtitle: "$12K to talk to 200 people who are also trying to sell something.",
-    icon: "🎸",
-    cost: 12_000,
-  },
-  {
-    id: "merch",
-    title: "Company Merch",
-    subtitle: "$2,500 in hoodies. You'll wear them to your next job.",
-    icon: "👕",
-    cost: 2_500,
-  },
-];
-
-export const curveballs: CurveballOption[] = [
-  {
-    id: "cto_equity",
-    title: "CTO Wants More Equity",
-    subtitle: "Your technical co-founder just discovered they're building the whole product for 10%.",
-    icon: "😤",
-    fixCost: 5_000,
-    ignoreText: "Ghost them on Slack. This will definitely resolve itself.",
-  },
-  {
-    id: "aws_bill",
-    title: "Surprise AWS Bill",
-    subtitle: "Someone left a GPU instance running. For 3 months.",
-    icon: "☁️",
-    fixCost: 6_000,
-    ignoreText: "Dispute the charges. Amazon loves that.",
-  },
-  {
-    id: "refund",
-    title: "Customer Refund Demands",
-    subtitle: "Your biggest customer wants their money back. All of it.",
-    icon: "💸",
-    fixCost: 4_000,
-    ignoreText: "Mark their emails as spam. Professional.",
+    id: "aws",
+    text: "your AWS bill just tripled",
+    emoji: "☁️",
+    optionA: { label: "pay it and cry", cost: 3200, effect: "lost $3,200" },
+    optionB: { label: "spend 2 days optimizing (lose momentum)", cost: 0, effect: "lost 2 days of dev time" },
   },
   {
     id: "competitor",
-    title: "Competitor Launches",
-    subtitle: "A well-funded competitor just copied your entire product. With a better UI.",
-    icon: "🥊",
-    fixCost: 3_000,
-    ignoreText: "Post about it on Twitter. Engagement is engagement.",
+    text: "a competitor just raised $10M",
+    emoji: "😰",
+    optionA: { label: "panic pivot to AI", cost: 5000, effect: "wasted $5K on a pivot sprint" },
+    optionB: { label: "stay the course", cost: 0, effect: "stayed focused. respect." },
   },
   {
-    id: "pivot",
-    title: "The Pivot",
-    subtitle: "Your users want something completely different. Do you listen?",
-    icon: "🔄",
-    fixCost: 10_000,
-    ignoreText: "Stay the course. The market is wrong.",
+    id: "poached",
+    text: "your best engineer got poached by Google",
+    emoji: "💔",
+    optionA: { label: "counter-offer with equity (-2% dilution)", cost: 0, effect: "kept them. for now." },
+    optionB: { label: "let them go, hire two juniors", cost: 0, effect: "+$12K/mo burn change" },
+  },
+  {
+    id: "bridge",
+    text: "investor wants to do a 'bridge round'",
+    emoji: "🌉",
+    optionA: { label: "take the money (+$50K, bad terms)", cost: -50000, effect: "got $50K at terrible terms" },
+    optionB: { label: "decline and keep grinding", cost: 0, effect: "pride intact. wallet not." },
+  },
+  {
+    id: "pivot_ai",
+    text: "cofounder wants to pivot. to AI.",
+    emoji: "🔄",
+    optionA: { label: "fine, let's add AI", cost: 0, effect: "+$3K/mo in API costs" },
+    optionB: { label: "stay focused", cost: 0, effect: "cofounder is grumpy for 2 months" },
+  },
+  {
+    id: "stripe",
+    text: "Stripe froze your account",
+    emoji: "🥶",
+    optionA: { label: "hire a lawyer", cost: 5000, effect: "resolved in 1 week" },
+    optionB: { label: "send angry emails for 3 weeks", cost: 0, effect: "3 weeks of no revenue" },
+  },
+  {
+    id: "batchmate",
+    text: "your YC batchmate just got acquired for $50M",
+    emoji: "😐",
+    optionA: { label: "send congrats, close laptop, go for a walk", cost: 0, effect: "mental health +1" },
+    optionB: { label: "rage-code for 48 hours", cost: 0, effect: "shipped a feature. looked terrible doing it." },
   },
 ];

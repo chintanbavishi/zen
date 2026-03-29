@@ -1,128 +1,119 @@
 import type { GameState, GameAction } from "./gameState";
 import { STARTING_CASH, TOTAL_MONTHS } from "./constants";
-import { teamChoices, officeChoices, b2cGrowthChoices, b2bGrowthChoices, temptations, curveballs } from "./gameData";
+import { initialTeam, initialOffices, initialGrowth, initialLifestyle, curveballPool } from "./gameData";
 import { simulateGame } from "./outcomeEngine";
-
-function computeRunway(cash: number, monthlyBurn: number, totalMonths: number): number {
-  if (monthlyBurn <= 0) return totalMonths;
-  return Math.min(totalMonths, Math.floor(cash / monthlyBurn));
-}
 
 export function initialState(): GameState {
   return {
     screen: 0,
     cash: STARTING_CASH,
-    monthlyBurn: 0,
-    monthsTotal: TOTAL_MONTHS,
-    runwayMonths: TOTAL_MONTHS,
-    businessType: null,
-    teamChoice: null,
-    officeChoice: null,
-    growthChoice: null,
-    temptationsAccepted: [],
-    curveballId: null,
-    curveballResolution: null,
-    mrr: 0,
-    arr: 0,
-    mau: 0,
-    customers: 0,
-    momGrowth: 0,
-    retention: 100,
+    markets: [],
+    team: initialTeam.map((t) => ({ ...t })),
+    offices: initialOffices.map((o) => ({ ...o })),
+    growth: initialGrowth.map((g) => ({ ...g })),
+    lifestyle: initialLifestyle.map((l) => ({ ...l })),
+    curveballs: [],
+    curveballResponses: [],
     monthEvents: [],
     outcome: null,
-    easterEgg: null,
+    diedAtMonth: null,
+    founderType: null,
+    burnEfficiency: 0,
   };
+}
+
+export function getMonthlyBurn(state: GameState): number {
+  const teamBurn = state.team.reduce((sum, t) => sum + t.salary * t.count, 0);
+  const headcount = state.team.reduce((sum, t) => sum + t.count, 0);
+  const officeBurn = state.offices
+    .filter((o) => o.selected)
+    .reduce((sum, o) => sum + (o.perPerson ? o.monthlyCost * Math.max(1, headcount) : o.monthlyCost), 0);
+  const growthBurn = state.growth.filter((g) => g.selected).reduce((sum, g) => sum + g.monthlyCost, 0);
+  const lifestyleBurn = state.lifestyle.filter((l) => l.selected).reduce((sum, l) => sum + l.monthlyCost, 0);
+  return teamBurn + officeBurn + growthBurn + lifestyleBurn;
+}
+
+export function getOneTimeCosts(state: GameState): number {
+  const growthOnetime = state.growth.filter((g) => g.selected).reduce((sum, g) => sum + g.oneTimeCost, 0);
+  const lifestyleOnetime = state.lifestyle.filter((l) => l.selected).reduce((sum, l) => sum + l.oneTimeCost, 0);
+  const curveballCosts = state.curveballResponses.reduce((sum, r) => {
+    const cb = state.curveballs.find((c) => c.id === r.id);
+    if (!cb) return sum;
+    return sum + (r.choice === "a" ? cb.optionA.cost : cb.optionB.cost);
+  }, 0);
+  return growthOnetime + lifestyleOnetime + curveballCosts;
+}
+
+export function getRemainingCash(state: GameState): number {
+  return state.cash - getOneTimeCosts(state);
+}
+
+export function getRunwayMonths(state: GameState): number {
+  const remaining = getRemainingCash(state);
+  const burn = getMonthlyBurn(state);
+  if (burn <= 0) return TOTAL_MONTHS;
+  return Math.min(TOTAL_MONTHS, remaining / burn);
+}
+
+function pickCurveballs(state: GameState): typeof curveballPool {
+  // Seeded shuffle based on choices
+  const seed = state.markets.length + state.team.reduce((s, t) => s + t.count, 0) + state.offices.filter((o) => o.selected).length;
+  const shuffled = [...curveballPool].sort((a, b) => {
+    const ha = a.id.charCodeAt(0) * 31 + seed;
+    const hb = b.id.charCodeAt(0) * 31 + seed;
+    return (ha % 97) - (hb % 97);
+  });
+  return shuffled.slice(0, 3);
 }
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
-    case "SET_TYPE": {
-      return { ...state, businessType: action.payload };
+    case "TOGGLE_MARKET": {
+      const markets = state.markets.includes(action.payload)
+        ? state.markets.filter((m) => m !== action.payload)
+        : [...state.markets, action.payload];
+      return { ...state, markets };
     }
 
-    case "SET_TEAM": {
-      const choice = teamChoices.find((c) => c.id === action.payload);
-      if (!choice) return state;
-      // Remove old team cost if already set
-      const oldTeam = state.teamChoice ? teamChoices.find((c) => c.id === state.teamChoice) : null;
-      const oldCost = oldTeam ? oldTeam.monthlyCost : 0;
-      const newBurn = state.monthlyBurn - oldCost + choice.monthlyCost;
+    case "SET_TEAM_COUNT": {
+      const team = state.team.map((t) =>
+        t.id === action.payload.id ? { ...t, count: Math.max(0, Math.min(5, action.payload.count)) } : t
+      );
+      return { ...state, team };
+    }
+
+    case "SET_TEAM_SALARY": {
+      const team = state.team.map((t) =>
+        t.id === action.payload.id ? { ...t, salary: Math.max(0, action.payload.salary) } : t
+      );
+      return { ...state, team };
+    }
+
+    case "TOGGLE_OFFICE": {
+      const offices = state.offices.map((o) =>
+        o.id === action.payload ? { ...o, selected: !o.selected } : o
+      );
+      return { ...state, offices };
+    }
+
+    case "TOGGLE_GROWTH": {
+      const growth = state.growth.map((g) =>
+        g.id === action.payload ? { ...g, selected: !g.selected } : g
+      );
+      return { ...state, growth };
+    }
+
+    case "TOGGLE_LIFESTYLE": {
+      const lifestyle = state.lifestyle.map((l) =>
+        l.id === action.payload ? { ...l, selected: !l.selected } : l
+      );
+      return { ...state, lifestyle };
+    }
+
+    case "RESPOND_CURVEBALL": {
       return {
         ...state,
-        teamChoice: action.payload,
-        monthlyBurn: newBurn,
-        runwayMonths: computeRunway(state.cash, newBurn, state.monthsTotal),
-      };
-    }
-
-    case "SET_OFFICE": {
-      const choice = officeChoices.find((c) => c.id === action.payload);
-      if (!choice) return state;
-      const oldOffice = state.officeChoice ? officeChoices.find((c) => c.id === state.officeChoice) : null;
-      const oldCost = oldOffice ? oldOffice.monthlyCost : 0;
-      const newBurn = state.monthlyBurn - oldCost + choice.monthlyCost;
-      return {
-        ...state,
-        officeChoice: action.payload,
-        monthlyBurn: newBurn,
-        runwayMonths: computeRunway(state.cash, newBurn, state.monthsTotal),
-      };
-    }
-
-    case "SET_GROWTH": {
-      const allGrowth = [...b2cGrowthChoices, ...b2bGrowthChoices];
-      const choice = allGrowth.find((c) => c.id === action.payload);
-      if (!choice) return state;
-
-      // Remove old growth cost if already set
-      const oldGrowthChoice = state.growthChoice ? allGrowth.find((c) => c.id === state.growthChoice) : null;
-      const oldMonthly = oldGrowthChoice ? oldGrowthChoice.monthlyCost : 0;
-
-      const newBurn = state.monthlyBurn - oldMonthly + choice.monthlyCost;
-      const newCash = state.cash - choice.oneTimeCost;
-
-      return {
-        ...state,
-        growthChoice: action.payload,
-        monthlyBurn: newBurn,
-        cash: newCash,
-        runwayMonths: computeRunway(newCash, newBurn, state.monthsTotal),
-      };
-    }
-
-    case "ACCEPT_TEMPTATION": {
-      const temptation = temptations.find((t) => t.id === action.payload);
-      if (!temptation) return state;
-      if (state.temptationsAccepted.includes(action.payload)) return state;
-      const newCash = state.cash - temptation.cost;
-      return {
-        ...state,
-        cash: newCash,
-        temptationsAccepted: [...state.temptationsAccepted, action.payload],
-        runwayMonths: computeRunway(newCash, state.monthlyBurn, state.monthsTotal),
-      };
-    }
-
-    case "SKIP_TEMPTATION": {
-      return state;
-    }
-
-    case "RESOLVE_CURVEBALL": {
-      const { id, choice } = action.payload;
-      const curveball = curveballs.find((c) => c.id === id);
-      if (!curveball) return state;
-
-      let newCash = state.cash;
-      if (choice === "fix") {
-        newCash = state.cash - curveball.fixCost;
-      }
-
-      return {
-        ...state,
-        curveballId: id,
-        curveballResolution: choice,
-        cash: newCash,
-        runwayMonths: computeRunway(newCash, state.monthlyBurn, state.monthsTotal),
+        curveballResponses: [...state.curveballResponses, action.payload],
       };
     }
 
@@ -131,27 +122,29 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         monthEvents: result.monthEvents,
-        mrr: result.finalMrr,
-        arr: result.finalArr,
-        mau: result.finalMau,
-        customers: result.finalCustomers,
-        momGrowth: result.momGrowth,
-        retention: result.retention,
         outcome: result.outcome,
-        easterEgg: result.easterEgg,
+        diedAtMonth: result.diedAtMonth,
+        founderType: result.founderType,
+        burnEfficiency: result.burnEfficiency,
       };
     }
 
     case "NEXT_SCREEN": {
-      return { ...state, screen: state.screen + 1 };
+      const next = state.screen + 1;
+      // Generate curveballs when entering curveball screen (screen 6)
+      if (next === 6 && state.curveballs.length === 0) {
+        return { ...state, screen: next, curveballs: pickCurveballs(state) };
+      }
+      return { ...state, screen: next };
     }
 
-    case "RESTART": {
+    case "PREV_SCREEN":
+      return { ...state, screen: Math.max(0, state.screen - 1) };
+
+    case "RESTART":
       return initialState();
-    }
 
-    default: {
+    default:
       return state;
-    }
   }
 }

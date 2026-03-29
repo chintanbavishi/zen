@@ -1,6 +1,4 @@
 export const STARTING_CASH = 250_000;
 export const TOTAL_MONTHS = 18;
-export const SERIES_A_THRESHOLD_B2B_ARR = 500_000;
-export const SERIES_A_THRESHOLD_B2C_MAU = 50_000;
-export const SERIES_A_THRESHOLD_GROWTH = 15;
-export const HEARTBEAT_CASH_THRESHOLD = 30_000;
+export const MIN_RUNWAY_TO_SURVIVE = 10_000;
+export const MAX_LIFESTYLE_RATIO = 0.5; // dies if >50% on lifestyle
