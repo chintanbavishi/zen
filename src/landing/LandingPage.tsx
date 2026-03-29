@@ -21,7 +21,7 @@ function PlaneSVG() {
       <g style={{ transformOrigin: "108px 24px", animation: "propSpin 0.12s linear infinite" }}>
         <rect x="106" y="14" width="4" height="20" rx="2" fill="#AAA" />
       </g>
-      <text x="42" y="28" fontSize="5" fill="#333" fontFamily="Inter, sans-serif" fontWeight="600" letterSpacing="0.5">BURN.MONEY</text>
+      <text x="42" y="28" fontSize="5" fill="#333" fontFamily="Poppins, sans-serif" fontWeight="600" letterSpacing="0.5">BURN.MONEY</text>
     </svg>
   );
 }
@@ -289,10 +289,11 @@ export function LandingPage() {
         overflow: "hidden",
         cursor: done ? "default" : "pointer",
         background: "#09090B",
-        fontFamily: "'Inter', system-ui, sans-serif",
+        fontFamily: "'Poppins', system-ui, sans-serif",
         userSelect: "none",
       }}
     >
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
         @keyframes propSpin { to { transform: rotate(360deg); } }
         @keyframes bobFloat {
@@ -440,7 +441,7 @@ export function LandingPage() {
                 padding: "14px 48px",
                 fontSize: "1rem",
                 fontWeight: 600,
-                fontFamily: "'Inter', system-ui, sans-serif",
+                fontFamily: "'Poppins', system-ui, sans-serif",
                 color: "white",
                 background: "#7C3AED",
                 border: "none",
