@@ -3,1017 +3,1083 @@ import { useState, useEffect, useCallback, useRef } from "react";
 
 /* ───── Phase Configuration ───── */
 interface Phase {
-  subtitle: string;
-  title: string;
-  skyGradient: string;
-  bridgeOpacity: number;
-  bridgeColor: string;
-  fogOpacity: number;
+  text: string;
+  skyTop: string;
+  skyMid: string;
+  skyBot: string;
+  hillNear: string;
+  hillFar: string;
   waterColor: string;
-  textColor: string;
-  glowColor: string;
+  bridgeColor: string;
   showStars: boolean;
   showMoon: boolean;
   showCityLights: boolean;
-  planeY: number; // % from top
-  planeX: number; // % from left
-  planeRotation: number; // degrees
   showRunway: boolean;
+  sunY: number; // percent from top
+  sunColor: string;
+  sunOpacity: number;
+  planeY: number;
 }
 
 const PHASES: Phase[] = [
   {
-    // Phase 1: Dawn (0-20%)
-    subtitle: "y combinator just wired you $250,000",
-    title: "every founder gets $250K",
-    skyGradient: `linear-gradient(to bottom,
-      #FFF8F0 0%, #F5D0B0 35%, #E8A87C 60%, #C4988A 80%, #1a2a3a 95%)`,
-    bridgeOpacity: 0.7,
-    bridgeColor: "#2a2a3a",
-    fogOpacity: 0.5,
-    waterColor: "#1a2a3a",
-    textColor: "rgba(42,42,58,0.85)",
-    glowColor: "rgba(232,168,124,0.4)",
+    // Phase 1: Morning in SF (0-20%)
+    text: "every founder gets $250K",
+    skyTop: "#4AC4F0",
+    skyMid: "#87CEEB",
+    skyBot: "#B0E0FF",
+    hillNear: "#4CAF50",
+    hillFar: "#A5D6A7",
+    waterColor: "#4A90D9",
+    bridgeColor: "#C41E3A",
     showStars: false,
     showMoon: false,
     showCityLights: false,
-    planeY: 55,
-    planeX: -10,
-    planeRotation: -8,
     showRunway: false,
+    sunY: 70,
+    sunColor: "#FFF176",
+    sunOpacity: 0.9,
+    planeY: 35,
   },
   {
-    // Phase 2: Day (20-40%)
-    subtitle: "the clock starts ticking",
-    title: "most burn through it in 12 months",
-    skyGradient: `linear-gradient(to bottom,
-      #B8D4E8 0%, #D4E4F0 25%, #FFF8F0 55%, #F0E0D0 80%, #1a2a3a 95%)`,
-    bridgeOpacity: 0.5,
-    bridgeColor: "#3a3a4a",
-    fogOpacity: 0.3,
-    waterColor: "#2a3a4a",
-    textColor: "rgba(42,42,58,0.8)",
-    glowColor: "rgba(184,212,232,0.3)",
+    // Phase 2: Flying Over the Bay (20-40%)
+    text: "most burn through it in 12 months",
+    skyTop: "#3AB8E8",
+    skyMid: "#7EC8E3",
+    skyBot: "#A8D8EA",
+    hillNear: "#66BB6A",
+    hillFar: "#C8E6C9",
+    waterColor: "#5BA3E6",
+    bridgeColor: "#D4382E",
     showStars: false,
     showMoon: false,
     showCityLights: false,
-    planeY: 30,
-    planeX: 25,
-    planeRotation: -12,
     showRunway: false,
-  },
-  {
-    // Phase 3: Sunset (40-60%)
-    subtitle: "against all odds",
-    title: "some build empires",
-    skyGradient: `linear-gradient(to bottom,
-      #E8A87C 0%, #D4887A 25%, #C4788A 45%, #8B5A7E 65%, #5C4A6E 85%, #1a2a3a 95%)`,
-    bridgeOpacity: 0.8,
-    bridgeColor: "#1a1a2a",
-    fogOpacity: 0.35,
-    waterColor: "#1a1a2a",
-    textColor: "rgba(250,245,239,0.85)",
-    glowColor: "rgba(232,168,124,0.5)",
-    showStars: false,
-    showMoon: false,
-    showCityLights: false,
+    sunY: 55,
+    sunColor: "#FFF9C4",
+    sunOpacity: 0.8,
     planeY: 25,
-    planeX: 50,
-    planeRotation: 0,
+  },
+  {
+    // Phase 3: Sunset Over SF (40-60%)
+    text: "some build empires",
+    skyTop: "#4A90D9",
+    skyMid: "#FF9800",
+    skyBot: "#E91E63",
+    hillNear: "#388E3C",
+    hillFar: "#81C784",
+    waterColor: "#D4772C",
+    bridgeColor: "#8B1A2B",
+    showStars: false,
+    showMoon: false,
+    showCityLights: false,
     showRunway: false,
+    sunY: 78,
+    sunColor: "#FF9800",
+    sunOpacity: 1,
+    planeY: 28,
   },
   {
     // Phase 4: Night (60-80%)
-    subtitle: "the runway gets shorter",
-    title: "most crash and burn",
-    skyGradient: `linear-gradient(to bottom,
-      #0C0E1A 0%, #1A1A3E 30%, #2D2B55 55%, #1A1A3E 80%, #0C0E1A 100%)`,
-    bridgeOpacity: 0.6,
-    bridgeColor: "#0a0a1a",
-    fogOpacity: 0.15,
-    waterColor: "#0a0a14",
-    textColor: "rgba(250,245,239,0.8)",
-    glowColor: "rgba(92,74,110,0.4)",
+    text: "most crash and burn",
+    skyTop: "#0D1B2A",
+    skyMid: "#1A237E",
+    skyBot: "#283593",
+    hillNear: "#1B5E20",
+    hillFar: "#2E7D32",
+    waterColor: "#0D1B2A",
+    bridgeColor: "#4A1A1A",
     showStars: true,
     showMoon: true,
     showCityLights: true,
-    planeY: 35,
-    planeX: 70,
-    planeRotation: 5,
     showRunway: false,
+    sunY: 100,
+    sunColor: "#FF9800",
+    sunOpacity: 0,
+    planeY: 30,
   },
   {
-    // Phase 5: New Dawn / Landing (80-100%)
-    subtitle: "you have one shot",
-    title: "find your runway",
-    skyGradient: `linear-gradient(to bottom,
-      #2D2B55 0%, #5C4A6E 20%, #C4788A 40%, #E8A87C 60%, #F5D0B0 80%, #1a2a3a 95%)`,
-    bridgeOpacity: 0.4,
-    bridgeColor: "#2a2a3a",
-    fogOpacity: 0.25,
-    waterColor: "#1a2a3a",
-    textColor: "rgba(250,245,239,0.9)",
-    glowColor: "rgba(232,168,124,0.6)",
+    // Phase 5: Landing (80-100%)
+    text: "find your runway",
+    skyTop: "#4A148C",
+    skyMid: "#FF6F00",
+    skyBot: "#FFB74D",
+    hillNear: "#2E7D32",
+    hillFar: "#66BB6A",
+    waterColor: "#3A6B9F",
+    bridgeColor: "#6B2020",
     showStars: false,
     showMoon: false,
-    showCityLights: false,
-    planeY: 62,
-    planeX: 60,
-    planeRotation: 12,
+    showCityLights: true,
     showRunway: true,
+    sunY: 75,
+    sunColor: "#FF6F00",
+    sunOpacity: 0.7,
+    planeY: 55,
   },
 ];
 
-/* ───── Interpolation helpers ───── */
-function lerp(a: number, b: number, t: number): number {
+/* ───── Helpers ───── */
+function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
-
 function lerpColor(a: string, b: string, t: number): string {
-  const parse = (c: string) => {
-    const hex = c.replace("#", "");
-    return [
-      parseInt(hex.slice(0, 2), 16),
-      parseInt(hex.slice(2, 4), 16),
-      parseInt(hex.slice(4, 6), 16),
-    ];
+  const pa = parseInt(a.slice(1), 16);
+  const pb = parseInt(b.slice(1), 16);
+  const r = Math.round(lerp((pa >> 16) & 255, (pb >> 16) & 255, t));
+  const g = Math.round(lerp((pa >> 8) & 255, (pb >> 8) & 255, t));
+  const bl = Math.round(lerp(pa & 255, pb & 255, t));
+  return `#${((1 << 24) + (r << 16) + (g << 8) + bl).toString(16).slice(1)}`;
+}
+
+function getPhaseValues(progress: number) {
+  const idx = Math.min(Math.floor(progress / 20), 4);
+  const nextIdx = Math.min(idx + 1, 4);
+  const t = (progress - idx * 20) / 20;
+
+  const a = PHASES[idx];
+  const b = PHASES[nextIdx];
+
+  return {
+    text: a.text,
+    showCTA: idx === 4,
+    skyTop: lerpColor(a.skyTop, b.skyTop, t),
+    skyMid: lerpColor(a.skyMid, b.skyMid, t),
+    skyBot: lerpColor(a.skyBot, b.skyBot, t),
+    hillNear: lerpColor(a.hillNear, b.hillNear, t),
+    hillFar: lerpColor(a.hillFar, b.hillFar, t),
+    waterColor: lerpColor(a.waterColor, b.waterColor, t),
+    bridgeColor: lerpColor(a.bridgeColor, b.bridgeColor, t),
+    showStars: a.showStars,
+    showMoon: a.showMoon,
+    showCityLights: a.showCityLights || b.showCityLights,
+    showRunway: a.showRunway,
+    sunY: lerp(a.sunY, b.sunY, t),
+    sunColor: lerpColor(a.sunColor, b.sunColor, t),
+    sunOpacity: lerp(a.sunOpacity, b.sunOpacity, t),
+    planeY: lerp(a.planeY, b.planeY, t),
+    parallaxX: progress * 3,
+    phaseIdx: idx,
   };
-  const [ar, ag, ab] = parse(a);
-  const [br, bg, bb] = parse(b);
-  const r = Math.round(lerp(ar, br, t));
-  const g = Math.round(lerp(ag, bg, t));
-  const bl = Math.round(lerp(ab, bb, t));
-  return `rgb(${r},${g},${bl})`;
 }
 
-/* ───── Money particle type ───── */
-interface MoneyParticle {
-  id: number;
-  x: number;
-  y: number;
-  opacity: number;
-  size: number;
-  vx: number;
-  vy: number;
-  rotation: number;
-}
-
-/* ───── Star data (generated once) ───── */
-function generateStars(count: number) {
-  const stars: { x: number; y: number; size: number; delay: number }[] = [];
-  for (let i = 0; i < count; i++) {
-    stars.push({
-      x: Math.random() * 100,
-      y: Math.random() * 60,
-      size: Math.random() * 2 + 0.5,
-      delay: Math.random() * 3,
-    });
-  }
-  return stars;
-}
-
-const STARS = generateStars(80);
-
-/* ───── Component ───── */
-export function LandingPage() {
-  const navigate = useNavigate();
-  const [progress, setProgress] = useState(0);
-  const [particles, setParticles] = useState<MoneyParticle[]>([]);
-  const particleIdRef = useRef(0);
-  const lastProgressRef = useRef(0);
-  const targetProgressRef = useRef(0);
-  const animFrameRef = useRef<number>(0);
-
-  // Smooth progress animation
-  useEffect(() => {
-    const animate = () => {
-      setProgress((prev) => {
-        const target = targetProgressRef.current;
-        const diff = target - prev;
-        if (Math.abs(diff) < 0.1) return target;
-        return prev + diff * 0.08;
-      });
-      animFrameRef.current = requestAnimationFrame(animate);
-    };
-    animFrameRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animFrameRef.current);
-  }, []);
-
-  // Spawn money particles when progress advances
-  const spawnParticles = useCallback(
-    (planeX: number, planeY: number) => {
-      const newParticles: MoneyParticle[] = [];
-      for (let i = 0; i < 3; i++) {
-        newParticles.push({
-          id: particleIdRef.current++,
-          x: planeX - 2 + Math.random() * 2,
-          y: planeY + Math.random() * 3,
-          opacity: 0.8 + Math.random() * 0.2,
-          size: 10 + Math.random() * 8,
-          vx: -0.3 - Math.random() * 0.5,
-          vy: 0.2 + Math.random() * 0.4,
-          rotation: Math.random() * 360,
-        });
-      }
-      setParticles((prev) => [...prev.slice(-30), ...newParticles]);
-    },
-    []
-  );
-
-  // Particle decay
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setParticles((prev) =>
-        prev
-          .map((p) => ({
-            ...p,
-            x: p.x + p.vx * 0.3,
-            y: p.y + p.vy * 0.3,
-            opacity: p.opacity - 0.015,
-            rotation: p.rotation + 2,
-          }))
-          .filter((p) => p.opacity > 0)
-      );
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Input handlers
-  const advanceProgress = useCallback(
-    (delta: number) => {
-      targetProgressRef.current = Math.min(
-        100,
-        Math.max(0, targetProgressRef.current + delta)
-      );
-      // Spawn particles if advancing
-      if (delta > 0 && targetProgressRef.current > 20) {
-        const phaseIdx = Math.min(
-          4,
-          Math.floor(targetProgressRef.current / 20)
-        );
-        const localT =
-          (targetProgressRef.current - phaseIdx * 20) / 20;
-        const phase = PHASES[phaseIdx];
-        const nextPhase = PHASES[Math.min(4, phaseIdx + 1)];
-        const px = lerp(phase.planeX, nextPhase.planeX, localT);
-        const py = lerp(phase.planeY, nextPhase.planeY, localT);
-        spawnParticles(px, py);
-      }
-    },
-    [spawnParticles]
-  );
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
-        e.preventDefault();
-        advanceProgress(15);
-      } else if (e.code === "ArrowRight" || e.code === "ArrowDown") {
-        e.preventDefault();
-        advanceProgress(5);
-      } else if (e.code === "ArrowLeft" || e.code === "ArrowUp") {
-        e.preventDefault();
-        advanceProgress(-5);
-      }
-    };
-
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      advanceProgress(e.deltaY > 0 ? 4 : -4);
-    };
-
-    let touchStartY = 0;
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY = e.touches[0].clientY;
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-      const delta = touchStartY - e.touches[0].clientY;
-      if (Math.abs(delta) > 5) {
-        advanceProgress(delta > 0 ? 3 : -3);
-        touchStartY = e.touches[0].clientY;
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    window.addEventListener("touchstart", handleTouchStart, {
-      passive: true,
-    });
-    window.addEventListener("touchmove", handleTouchMove, {
-      passive: false,
-    });
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
-    };
-  }, [advanceProgress]);
-
-  // Track progress for particle spawning
-  useEffect(() => {
-    lastProgressRef.current = progress;
-  }, [progress]);
-
-  /* ───── Derived phase state ───── */
-  const phaseIdx = Math.min(4, Math.floor(progress / 20));
-  const nextIdx = Math.min(4, phaseIdx + 1);
-  const localT = phaseIdx === nextIdx ? 0 : (progress - phaseIdx * 20) / 20;
-  const phase = PHASES[phaseIdx];
-  const next = PHASES[nextIdx];
-
-  const planeX = lerp(phase.planeX, next.planeX, localT);
-  const planeY = lerp(phase.planeY, next.planeY, localT);
-  const planeRot = lerp(phase.planeRotation, next.planeRotation, localT);
-  const bridgeOpacity = lerp(phase.bridgeOpacity, next.bridgeOpacity, localT);
-  const bridgeColor = lerpColor(phase.bridgeColor, next.bridgeColor, localT);
-  const fogOpacity = lerp(phase.fogOpacity, next.fogOpacity, localT);
-  const waterColor = lerpColor(phase.waterColor, next.waterColor, localT);
-  const starsOpacity = phase.showStars
-    ? localT < 0.5
-      ? lerp(0, 1, localT * 2)
-      : 1
-    : next.showStars
-    ? lerp(0, 1, localT)
-    : 0;
-  const moonOpacity = phase.showMoon ? 1 : next.showMoon ? localT : 0;
-  const cityOpacity = phase.showCityLights
-    ? 1
-    : next.showCityLights
-    ? localT
-    : 0;
-
-  // Sky gradient — use current phase gradient (snaps at phase boundaries for clean transitions)
-  const skyGradient =
-    localT < 0.5 ? phase.skyGradient : next.skyGradient;
-
-  // Text — show current phase text, fade based on local position
-  const textOpacity =
-    localT < 0.15
-      ? localT / 0.15
-      : localT > 0.85
-      ? (1 - localT) / 0.15
-      : 1;
-  const currentPhase = PHASES[phaseIdx];
-
-  const showCTA = progress >= 90;
-  const planeEntered = progress > 2;
-
+/* ───── Pixel Cloud Component ───── */
+function PixelCloud({ x, y, size = 1 }: { x: number; y: number; size?: number }) {
+  const s = 6 * size;
   return (
     <div
       style={{
-        position: "fixed",
-        inset: 0,
-        overflow: "hidden",
-        margin: 0,
-        padding: 0,
-        background: skyGradient,
-        fontFamily: "'Outfit', sans-serif",
-        cursor: "default",
-        userSelect: "none",
-        transition: "background 1.5s ease",
+        position: "absolute",
+        left: `${x}%`,
+        top: `${y}%`,
+        imageRendering: "pixelated" as const,
       }}
     >
-      {/* Google Fonts */}
-      <link
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-      />
-
-      {/* Horizon glow */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "30%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "140%",
-          height: "40%",
-          background: `radial-gradient(ellipse at center, ${phase.glowColor} 0%, transparent 70%)`,
-          pointerEvents: "none",
-          transition: "background 1.5s ease",
-        }}
-      />
-
-      {/* Stars */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none",
-          opacity: starsOpacity,
-          transition: "opacity 1s ease",
-          zIndex: 1,
-        }}
+      <svg
+        width={s * 10}
+        height={s * 5}
+        viewBox="0 0 10 5"
+        shapeRendering="crispEdges"
       >
-        {STARS.map((s, i) => (
-          <div
-            key={i}
-            className="star-twinkle"
-            style={{
-              position: "absolute",
-              left: `${s.x}%`,
-              top: `${s.y}%`,
-              width: s.size,
-              height: s.size,
-              borderRadius: "50%",
-              background: "#faf5ef",
-              animationDelay: `${s.delay}s`,
-            }}
-          />
-        ))}
-      </div>
+        {/* Cloud body */}
+        <rect x="1" y="2" width="8" height="2" fill="#FFFFFF" />
+        <rect x="2" y="1" width="6" height="1" fill="#FFFFFF" />
+        <rect x="3" y="0" width="2" height="1" fill="#FFFFFF" />
+        <rect x="6" y="0" width="2" height="1" fill="#FFFFFF" />
+        <rect x="0" y="3" width="1" height="1" fill="#FFFFFF" />
+        <rect x="9" y="3" width="1" height="1" fill="#FFFFFF" />
+        {/* Shadow */}
+        <rect x="1" y="4" width="8" height="1" fill="#D0E8FF" />
+        <rect x="0" y="4" width="1" height="1" fill="#D0E8FF" opacity="0.5" />
+      </svg>
+    </div>
+  );
+}
 
-      {/* Moon */}
-      <div
-        style={{
-          position: "absolute",
-          top: "8%",
-          right: "15%",
-          width: 60,
-          height: 60,
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle at 40% 40%, #FFF8F0 0%, #E8D8C8 60%, #C4B8A8 100%)",
-          boxShadow: "0 0 40px rgba(255,248,240,0.3), 0 0 80px rgba(255,248,240,0.15)",
-          opacity: moonOpacity,
-          transition: "opacity 1s ease",
-          pointerEvents: "none",
-          zIndex: 1,
-        }}
-      />
-
-      {/* City lights (distant, along water line) */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "14%",
-          left: 0,
-          right: 0,
-          height: 3,
-          opacity: cityOpacity,
-          transition: "opacity 1s ease",
-          pointerEvents: "none",
-          zIndex: 2,
-        }}
-      >
-        {Array.from({ length: 40 }).map((_, i) => (
-          <div
-            key={i}
-            className="city-light-blink"
-            style={{
-              position: "absolute",
-              left: `${5 + i * 2.3}%`,
-              width: Math.random() > 0.5 ? 2 : 1,
-              height: Math.random() > 0.5 ? 3 : 2,
-              background:
-                i % 3 === 0
-                  ? "rgba(255,200,100,0.8)"
-                  : "rgba(255,248,240,0.6)",
-              animationDelay: `${Math.random() * 4}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Golden Gate Bridge SVG */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "15%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "65%",
-          maxWidth: 900,
-          pointerEvents: "none",
-          filter: "blur(0.6px)",
-          opacity: bridgeOpacity,
-          transition: "opacity 1s ease",
-          zIndex: 2,
-        }}
-      >
-        <svg
-          viewBox="0 0 1000 300"
-          preserveAspectRatio="xMidYMax meet"
-          style={{ width: "100%", height: "auto", display: "block" }}
-        >
-          {/* Deck */}
-          <rect x="50" y="220" width="900" height="6" fill={bridgeColor} />
-
-          {/* Left tower */}
-          <polygon
-            points="280,40 290,40 294,220 276,220"
-            fill={bridgeColor}
-          />
-          <polygon
-            points="300,40 310,40 314,220 296,220"
-            fill={bridgeColor}
-          />
-          <rect x="275" y="40" width="40" height="5" fill={bridgeColor} />
-          <rect x="275" y="100" width="40" height="4" fill={bridgeColor} />
-          <rect x="275" y="155" width="40" height="4" fill={bridgeColor} />
-
-          {/* Right tower */}
-          <polygon
-            points="690,40 700,40 704,220 686,220"
-            fill={bridgeColor}
-          />
-          <polygon
-            points="710,40 720,40 724,220 706,220"
-            fill={bridgeColor}
-          />
-          <rect x="685" y="40" width="40" height="5" fill={bridgeColor} />
-          <rect x="685" y="100" width="40" height="4" fill={bridgeColor} />
-          <rect x="685" y="155" width="40" height="4" fill={bridgeColor} />
-
-          {/* Main cables */}
-          <path
-            d="M50,120 Q165,180 295,42"
-            stroke={bridgeColor}
-            strokeWidth="3"
-            fill="none"
-          />
-          <path
-            d="M295,42 Q500,200 705,42"
-            stroke={bridgeColor}
-            strokeWidth="3"
-            fill="none"
-          />
-          <path
-            d="M705,42 Q835,180 950,120"
-            stroke={bridgeColor}
-            strokeWidth="3"
-            fill="none"
-          />
-
-          {/* Suspender cables - left approach */}
-          {[120, 170, 220].map((x) => {
-            const t = (x - 50) / (295 - 50);
-            const cy =
-              120 * (1 - t) * (1 - t) +
-              180 * 2 * t * (1 - t) +
-              42 * t * t;
-            return (
-              <line
-                key={`la${x}`}
-                x1={x}
-                y1={cy}
-                x2={x}
-                y2={220}
-                stroke={bridgeColor}
-                strokeWidth="1"
-                opacity="0.6"
-              />
-            );
-          })}
-
-          {/* Suspender cables - center span */}
-          {[340, 380, 420, 460, 500, 540, 580, 620, 660].map((x) => {
-            const t = (x - 295) / (705 - 295);
-            const cy =
-              42 * (1 - t) * (1 - t) +
-              200 * 2 * t * (1 - t) +
-              42 * t * t;
-            return (
-              <line
-                key={`cs${x}`}
-                x1={x}
-                y1={cy}
-                x2={x}
-                y2={220}
-                stroke={bridgeColor}
-                strokeWidth="1"
-                opacity="0.6"
-              />
-            );
-          })}
-
-          {/* Suspender cables - right approach */}
-          {[780, 830, 880].map((x) => {
-            const t = (x - 705) / (950 - 705);
-            const cy =
-              42 * (1 - t) * (1 - t) +
-              180 * 2 * t * (1 - t) +
-              120 * t * t;
-            return (
-              <line
-                key={`ra${x}`}
-                x1={x}
-                y1={cy}
-                x2={x}
-                y2={220}
-                stroke={bridgeColor}
-                strokeWidth="1"
-                opacity="0.6"
-              />
-            );
-          })}
-        </svg>
-      </div>
-
-      {/* Fog layers */}
-      <div
-        className="fog-layer fog-1"
-        style={{
-          position: "absolute",
-          bottom: "25%",
-          left: "-10%",
-          right: "-10%",
-          height: "30%",
-          background: `linear-gradient(to top, rgba(255,248,240,${fogOpacity}), transparent)`,
-          pointerEvents: "none",
-          willChange: "transform",
-          filter: "blur(8px)",
-          zIndex: 3,
-        }}
-      />
-      <div
-        className="fog-layer fog-2"
-        style={{
-          position: "absolute",
-          bottom: "35%",
-          left: "-5%",
-          right: "-5%",
-          height: "25%",
-          background: `linear-gradient(to top, rgba(255,248,240,${fogOpacity * 0.5}), transparent)`,
-          pointerEvents: "none",
-          willChange: "transform",
-          filter: "blur(15px)",
-          zIndex: 3,
-        }}
-      />
-      <div
-        className="fog-layer fog-3"
-        style={{
-          position: "absolute",
-          bottom: "45%",
-          left: "-8%",
-          right: "-8%",
-          height: "20%",
-          background: `linear-gradient(to top, rgba(200,185,210,${fogOpacity * 0.4}), transparent)`,
-          filter: "blur(25px)",
-          pointerEvents: "none",
-          willChange: "transform",
-          zIndex: 3,
-        }}
-      />
-
-      {/* Top haze */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "35%",
-          background:
-            "linear-gradient(to bottom, rgba(0,0,0,0.15), transparent)",
-          pointerEvents: "none",
-          zIndex: 3,
-        }}
-      />
-
-      {/* Water */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: "15%",
-          background: `linear-gradient(to bottom, ${waterColor}, ${waterColor})`,
-          pointerEvents: "none",
-          transition: "background 1.5s ease",
-          zIndex: 1,
-        }}
-      >
+/* ───── Pixel Stars ───── */
+function PixelStars() {
+  const stars = useRef(
+    Array.from({ length: 40 }, (_, i) => ({
+      x: (i * 37 + 13) % 100,
+      y: (i * 23 + 7) % 45,
+      size: i % 3 === 0 ? 3 : 2,
+      delay: (i * 0.3) % 2,
+    }))
+  );
+  return (
+    <>
+      {stars.current.map((s, i) => (
         <div
-          className="water-shimmer"
+          key={i}
           style={{
             position: "absolute",
-            top: 0,
-            left: "10%",
-            right: "10%",
-            height: 1,
-            background:
-              "linear-gradient(90deg, transparent, rgba(240,201,160,0.3), transparent)",
-            pointerEvents: "none",
+            left: `${s.x}%`,
+            top: `${s.y}%`,
+            width: s.size,
+            height: s.size,
+            backgroundColor: i % 5 === 0 ? "#FFF9C4" : "#FFFFFF",
+            imageRendering: "pixelated" as const,
+            animation: `twinkle 1.5s ease-in-out ${s.delay}s infinite alternate`,
           }}
         />
-      </div>
+      ))}
+    </>
+  );
+}
 
-      {/* Runway (Phase 5) */}
-      {progress > 75 && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: "15%",
-            right: "12%",
-            width: "25%",
-            height: 4,
-            background: "rgba(250,245,239,0.4)",
-            opacity: Math.min(1, (progress - 75) / 15),
-            transform: "perspective(400px) rotateX(30deg) rotateZ(-5deg)",
-            transformOrigin: "right center",
-            pointerEvents: "none",
-            zIndex: 4,
-          }}
-        >
-          {/* Runway markings */}
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div
+/* ───── Pixel Moon ───── */
+function PixelMoon() {
+  return (
+    <div style={{ position: "absolute", right: "12%", top: "8%" }}>
+      <svg
+        width={48}
+        height={48}
+        viewBox="0 0 8 8"
+        shapeRendering="crispEdges"
+        style={{ imageRendering: "pixelated" as const }}
+      >
+        <rect x="2" y="0" width="4" height="1" fill="#FFF9C4" />
+        <rect x="1" y="1" width="4" height="1" fill="#FFF9C4" />
+        <rect x="0" y="2" width="4" height="1" fill="#FFF9C4" />
+        <rect x="0" y="3" width="4" height="1" fill="#FFF9C4" />
+        <rect x="0" y="4" width="4" height="1" fill="#FFF9C4" />
+        <rect x="0" y="5" width="4" height="1" fill="#FFF9C4" />
+        <rect x="1" y="6" width="4" height="1" fill="#FFF9C4" />
+        <rect x="2" y="7" width="4" height="1" fill="#FFF9C4" />
+      </svg>
+    </div>
+  );
+}
+
+/* ───── Pixel Bridge (Golden Gate) ───── */
+function PixelBridge({ color, parallaxX }: { color: string; parallaxX: number }) {
+  const lighter = color;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        bottom: "28%",
+        left: `calc(30% - ${parallaxX * 0.5}px)`,
+        width: 320,
+        height: 120,
+        imageRendering: "pixelated" as const,
+        transition: "left 0.3s ease-out",
+      }}
+    >
+      <svg
+        width={320}
+        height={120}
+        viewBox="0 0 80 30"
+        shapeRendering="crispEdges"
+      >
+        {/* Left tower */}
+        <rect x="12" y="2" width="4" height="24" fill={lighter} />
+        <rect x="11" y="0" width="6" height="3" fill={lighter} />
+        {/* Right tower */}
+        <rect x="58" y="2" width="4" height="24" fill={lighter} />
+        <rect x="57" y="0" width="6" height="3" fill={lighter} />
+        {/* Road deck */}
+        <rect x="0" y="18" width="80" height="3" fill={lighter} />
+        {/* Cables - left side */}
+        <rect x="14" y="3" width="1" height="1" fill={lighter} />
+        <rect x="16" y="4" width="1" height="1" fill={lighter} />
+        <rect x="18" y="5" width="1" height="1" fill={lighter} />
+        <rect x="20" y="6" width="1" height="1" fill={lighter} />
+        <rect x="22" y="7" width="1" height="1" fill={lighter} />
+        <rect x="24" y="8" width="1" height="1" fill={lighter} />
+        <rect x="26" y="9" width="1" height="1" fill={lighter} />
+        <rect x="28" y="10" width="1" height="1" fill={lighter} />
+        <rect x="30" y="11" width="1" height="1" fill={lighter} />
+        <rect x="32" y="12" width="1" height="1" fill={lighter} />
+        <rect x="34" y="13" width="1" height="1" fill={lighter} />
+        <rect x="36" y="14" width="1" height="1" fill={lighter} />
+        <rect x="38" y="15" width="1" height="1" fill={lighter} />
+        {/* Cables - right side */}
+        <rect x="40" y="15" width="1" height="1" fill={lighter} />
+        <rect x="42" y="14" width="1" height="1" fill={lighter} />
+        <rect x="44" y="13" width="1" height="1" fill={lighter} />
+        <rect x="46" y="12" width="1" height="1" fill={lighter} />
+        <rect x="48" y="11" width="1" height="1" fill={lighter} />
+        <rect x="50" y="10" width="1" height="1" fill={lighter} />
+        <rect x="52" y="9" width="1" height="1" fill={lighter} />
+        <rect x="54" y="8" width="1" height="1" fill={lighter} />
+        <rect x="56" y="7" width="1" height="1" fill={lighter} />
+        <rect x="60" y="4" width="1" height="1" fill={lighter} />
+        <rect x="62" y="5" width="1" height="1" fill={lighter} />
+        <rect x="64" y="6" width="1" height="1" fill={lighter} />
+        {/* Vertical suspenders */}
+        {[16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56].map((xp) => (
+          <rect key={xp} x={xp} y={Math.max(4, 18 - Math.abs(xp - 36) * 0.5)} width="1" height={18 - Math.max(4, 18 - Math.abs(xp - 36) * 0.5)} fill={lighter} opacity="0.6" />
+        ))}
+        {/* Tower lights at night - small red dots */}
+        <rect x="13" y="0" width="2" height="1" fill="#FF3333" opacity="0.8" />
+        <rect x="59" y="0" width="2" height="1" fill="#FF3333" opacity="0.8" />
+      </svg>
+    </div>
+  );
+}
+
+/* ───── Pixel City Skyline ───── */
+function PixelSkyline({
+  parallaxX,
+  showLights,
+}: {
+  parallaxX: number;
+  showLights: boolean;
+}) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        bottom: "30%",
+        right: `calc(-5% - ${parallaxX * 0.3}px)`,
+        width: 200,
+        height: 80,
+        imageRendering: "pixelated" as const,
+        transition: "right 0.3s ease-out",
+      }}
+    >
+      <svg
+        width={200}
+        height={80}
+        viewBox="0 0 50 20"
+        shapeRendering="crispEdges"
+      >
+        {/* Buildings */}
+        <rect x="2" y="6" width="5" height="14" fill="#546E7A" />
+        <rect x="8" y="3" width="4" height="17" fill="#455A64" />
+        <rect x="13" y="8" width="6" height="12" fill="#607D8B" />
+        <rect x="20" y="1" width="3" height="19" fill="#37474F" />
+        <rect x="24" y="5" width="5" height="15" fill="#546E7A" />
+        <rect x="30" y="7" width="4" height="13" fill="#455A64" />
+        <rect x="35" y="4" width="3" height="16" fill="#607D8B" />
+        <rect x="39" y="9" width="5" height="11" fill="#546E7A" />
+        <rect x="45" y="6" width="4" height="14" fill="#37474F" />
+        {/* Transamerica-ish */}
+        <rect x="21" y="0" width="1" height="1" fill="#37474F" />
+        {/* Windows when lit */}
+        {showLights &&
+          [
+            [3, 8],
+            [5, 10],
+            [3, 12],
+            [9, 5],
+            [10, 7],
+            [9, 9],
+            [14, 10],
+            [16, 12],
+            [15, 14],
+            [21, 3],
+            [21, 6],
+            [21, 9],
+            [25, 7],
+            [27, 9],
+            [25, 11],
+            [31, 9],
+            [32, 11],
+            [36, 6],
+            [36, 8],
+            [40, 11],
+            [42, 13],
+            [46, 8],
+            [47, 10],
+          ].map(([wx, wy], i) => (
+            <rect
               key={i}
-              style={{
-                position: "absolute",
-                left: `${10 + i * 11}%`,
-                top: -1,
-                width: "6%",
-                height: 2,
-                background: "rgba(250,245,239,0.6)",
-              }}
+              x={wx}
+              y={wy}
+              width="1"
+              height="1"
+              fill="#FFF176"
+              opacity={0.7 + (i % 3) * 0.1}
             />
           ))}
-        </div>
-      )}
+      </svg>
+    </div>
+  );
+}
 
-      {/* Money particles */}
-      {particles.map((p) => (
+/* ───── Pixel Plane ───── */
+function PixelPlane({
+  y,
+  boosted,
+  isNight,
+}: {
+  y: number;
+  boosted: boolean;
+  isNight: boolean;
+}) {
+  const windowFill = isNight ? "#FFF176" : "#87CEEB";
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: "35%",
+        top: `${y}%`,
+        transform: boosted
+          ? "rotate(-12deg) translateY(-24px)"
+          : "rotate(-2deg) translateY(0px)",
+        transition: boosted
+          ? "transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1.2)"
+          : "transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), top 0.8s ease-out",
+        zIndex: 20,
+        imageRendering: "pixelated" as const,
+      }}
+    >
+      <svg
+        width={140}
+        height={60}
+        viewBox="0 0 35 15"
+        shapeRendering="crispEdges"
+      >
+        {/* Propeller */}
+        <g style={{ transformOrigin: "3px 6px", animation: "spin 0.15s linear infinite" }}>
+          <rect x="1" y="4" width="1" height="1" fill="#78909C" />
+          <rect x="1" y="7" width="1" height="1" fill="#78909C" />
+          <rect x="2" y="5" width="1" height="2" fill="#90A4AE" />
+        </g>
+        {/* Nose */}
+        <rect x="3" y="5" width="2" height="3" fill="#E0E0E0" />
+        {/* Body */}
+        <rect x="5" y="4" width="20" height="5" fill="#F5F5F5" />
+        <rect x="5" y="3" width="18" height="1" fill="#EEEEEE" />
+        <rect x="5" y="9" width="18" height="1" fill="#E0E0E0" />
+        {/* Cockpit */}
+        <rect x="5" y="4" width="3" height="2" fill="#81D4FA" />
+        {/* Windows */}
+        <rect x="10" y="5" width="1" height="1" fill={windowFill} />
+        <rect x="13" y="5" width="1" height="1" fill={windowFill} />
+        <rect x="16" y="5" width="1" height="1" fill={windowFill} />
+        <rect x="19" y="5" width="1" height="1" fill={windowFill} />
+        {/* Wing top */}
+        <rect x="11" y="1" width="8" height="2" fill="#B0BEC5" />
+        <rect x="12" y="0" width="6" height="1" fill="#90A4AE" />
+        {/* Wing bottom */}
+        <rect x="11" y="10" width="8" height="2" fill="#B0BEC5" />
+        <rect x="12" y="12" width="6" height="1" fill="#90A4AE" />
+        {/* Tail */}
+        <rect x="25" y="4" width="5" height="4" fill="#E0E0E0" />
+        <rect x="28" y="1" width="3" height="3" fill="#BDBDBD" />
+        <rect x="30" y="0" width="2" height="2" fill="#C41E3A" />
+        <rect x="29" y="8" width="3" height="2" fill="#BDBDBD" />
+        {/* BURN.MONEY text (tiny line for flavor) */}
+        <rect x="8" y="7" width="10" height="1" fill="#C41E3A" opacity="0.6" />
+        {/* Engine glow */}
+        <rect x="1" y="6" width="2" height="1" fill="#FFD54F" opacity="0.6" />
+      </svg>
+    </div>
+  );
+}
+
+/* ───── Money Trail ───── */
+function MoneyTrail({ progress }: { progress: number }) {
+  const count = Math.floor(progress / 8);
+  const bills = useRef(
+    Array.from({ length: 12 }, (_, i) => ({
+      x: 28 - i * 6 + (i % 2) * 2,
+      y: 40 + (i % 3) * 8 - (i % 2) * 4,
+      rot: (i * 25) % 40 - 20,
+      delay: i * 0.15,
+    }))
+  );
+  if (progress < 15) return null;
+  return (
+    <>
+      {bills.current.slice(0, Math.min(count, 12)).map((b, i) => (
         <div
-          key={p.id}
+          key={i}
           style={{
             position: "absolute",
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            fontSize: p.size,
-            color: "#4ade80",
-            opacity: p.opacity,
-            transform: `rotate(${p.rotation}deg)`,
-            pointerEvents: "none",
-            zIndex: 6,
-            fontWeight: 600,
-            textShadow: "0 0 8px rgba(74,222,128,0.4)",
+            left: `${b.x}%`,
+            top: `${b.y}%`,
+            transform: `rotate(${b.rot}deg)`,
+            opacity: Math.max(0, 1 - (progress - 20) * 0.008),
+            fontSize: 16,
+            color: "#4CAF50",
+            fontWeight: 900,
+            fontFamily: "monospace",
+            textShadow: "1px 1px 0 #2E7D32",
+            animation: `float ${2 + (i % 3) * 0.5}s ease-in-out ${b.delay}s infinite alternate`,
+            zIndex: 15,
+            imageRendering: "pixelated" as const,
           }}
         >
           $
         </div>
       ))}
+    </>
+  );
+}
 
-      {/* Plane SVG */}
-      <div
-        style={{
-          position: "absolute",
-          left: `${planeX}%`,
-          top: `${planeY}%`,
-          transform: `translate(-50%, -50%) rotate(${planeRot}deg)`,
-          transition: "left 0.3s ease-out, top 0.3s ease-out",
-          opacity: planeEntered ? 1 : 0,
-          pointerEvents: "none",
-          zIndex: 7,
-          filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))",
-        }}
-      >
-        <svg
-          width="120"
-          height="60"
-          viewBox="0 0 120 60"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+/* ───── Pixel Birds ───── */
+function PixelBirds({ progress }: { progress: number }) {
+  if (progress < 20 || progress > 50) return null;
+  return (
+    <>
+      {[
+        { x: 65, y: 18, s: 0.8 },
+        { x: 72, y: 14, s: 1 },
+        { x: 78, y: 20, s: 0.7 },
+      ].map((bird, i) => (
+        <div
+          key={i}
+          style={{
+            position: "absolute",
+            left: `${bird.x}%`,
+            top: `${bird.y}%`,
+            animation: `birdFly 1.2s ease-in-out ${i * 0.3}s infinite alternate`,
+            zIndex: 10,
+          }}
         >
-          {/* Fuselage */}
-          <ellipse cx="55" cy="30" rx="40" ry="10" fill="#E8D8C8" />
-          <ellipse cx="55" cy="30" rx="40" ry="10" fill="url(#fuselageGrad)" />
-
-          {/* Cockpit window */}
-          <ellipse cx="88" cy="28" rx="6" ry="5" fill="#B8D4E8" opacity="0.8" />
-
-          {/* Wing */}
-          <path
-            d="M35,30 L20,12 L65,28 Z"
-            fill="#D4C4B4"
-            opacity="0.9"
-          />
-          <path
-            d="M35,30 L20,48 L65,32 Z"
-            fill="#C4B4A4"
-            opacity="0.9"
-          />
-
-          {/* Tail */}
-          <path d="M15,30 L5,14 L22,28 Z" fill="#D4C4B4" opacity="0.85" />
-          <path d="M15,30 L10,26 L18,28 Z" fill="#C4B4A4" opacity="0.85" />
-
-          {/* BURN.MONEY text on fuselage */}
-          <text
-            x="55"
-            y="33"
-            textAnchor="middle"
-            fontSize="6"
-            fontFamily="Outfit, sans-serif"
-            fontWeight="600"
-            fill="#5C4A6E"
-            opacity="0.7"
+          <svg
+            width={12 * bird.s}
+            height={8 * bird.s}
+            viewBox="0 0 6 4"
+            shapeRendering="crispEdges"
           >
-            BURN.MONEY
-          </text>
+            <rect x="0" y="0" width="1" height="1" fill="#333" />
+            <rect x="1" y="1" width="1" height="1" fill="#333" />
+            <rect x="2" y="2" width="1" height="1" fill="#333" />
+            <rect x="3" y="2" width="1" height="1" fill="#333" />
+            <rect x="4" y="1" width="1" height="1" fill="#333" />
+            <rect x="5" y="0" width="1" height="1" fill="#333" />
+          </svg>
+        </div>
+      ))}
+    </>
+  );
+}
 
-          {/* Propeller */}
-          <g className="propeller-spin" style={{ transformOrigin: "98px 30px" }}>
-            <rect
-              x="96"
-              y="20"
-              width="4"
-              height="20"
-              rx="2"
-              fill="#8B7A6A"
-              opacity="0.7"
-            />
-          </g>
-
-          {/* Engine exhaust glow */}
-          <circle cx="12" cy="30" r="3" fill="#E8A87C" opacity="0.4">
-            <animate
-              attributeName="opacity"
-              values="0.2;0.5;0.2"
-              dur="0.3s"
-              repeatCount="indefinite"
-            />
-          </circle>
-
-          <defs>
-            <linearGradient
-              id="fuselageGrad"
-              x1="15"
-              y1="20"
-              x2="95"
-              y2="40"
-            >
-              <stop offset="0%" stopColor="#FFF8F0" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#C4B4A4" stopOpacity="0.2" />
-            </linearGradient>
-          </defs>
+/* ───── Pixel Sunflowers ───── */
+function PixelSunflowers({ parallaxX }: { parallaxX: number }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        bottom: "6%",
+        left: `calc(10% - ${parallaxX * 1.2}px)`,
+        display: "flex",
+        gap: 16,
+        zIndex: 12,
+        transition: "left 0.3s ease-out",
+      }}
+    >
+      {[0, 1, 2].map((i) => (
+        <svg
+          key={i}
+          width={20}
+          height={32}
+          viewBox="0 0 5 8"
+          shapeRendering="crispEdges"
+          style={{ imageRendering: "pixelated" as const }}
+        >
+          {/* Stem */}
+          <rect x="2" y="4" width="1" height="4" fill="#388E3C" />
+          <rect x="1" y="5" width="1" height="1" fill="#388E3C" />
+          {/* Petals */}
+          <rect x="1" y="0" width="3" height="1" fill="#FFC107" />
+          <rect x="0" y="1" width="1" height="2" fill="#FFC107" />
+          <rect x="4" y="1" width="1" height="2" fill="#FFC107" />
+          <rect x="1" y="3" width="3" height="1" fill="#FFC107" />
+          {/* Center */}
+          <rect x="1" y="1" width="3" height="2" fill="#FF9800" />
+          <rect x="2" y="1" width="1" height="2" fill="#795548" />
         </svg>
-      </div>
+      ))}
+    </div>
+  );
+}
 
-      {/* Grain overlay */}
+/* ───── Pixel Trees ───── */
+function PixelTree({
+  x,
+  bottom,
+  size = 1,
+  dark = false,
+}: {
+  x: number;
+  bottom: number;
+  size?: number;
+  dark?: boolean;
+}) {
+  const fill1 = dark ? "#1B5E20" : "#2E7D32";
+  const fill2 = dark ? "#2E7D32" : "#388E3C";
+  const fill3 = dark ? "#388E3C" : "#66BB6A";
+  const s = 6 * size;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: `${x}%`,
+        bottom: `${bottom}%`,
+        imageRendering: "pixelated" as const,
+        zIndex: 11,
+      }}
+    >
+      <svg
+        width={s * 5}
+        height={s * 8}
+        viewBox="0 0 5 8"
+        shapeRendering="crispEdges"
+      >
+        {/* Trunk */}
+        <rect x="2" y="6" width="1" height="2" fill="#795548" />
+        {/* Foliage */}
+        <rect x="1" y="4" width="3" height="2" fill={fill1} />
+        <rect x="0" y="3" width="5" height="2" fill={fill2} />
+        <rect x="1" y="1" width="3" height="2" fill={fill2} />
+        <rect x="2" y="0" width="1" height="1" fill={fill3} />
+        {/* Highlight */}
+        <rect x="1" y="2" width="1" height="1" fill={fill3} />
+      </svg>
+    </div>
+  );
+}
+
+/* ───── Pixel Runway ───── */
+function PixelRunway() {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        bottom: "10%",
+        left: "30%",
+        width: 300,
+        height: 20,
+        zIndex: 14,
+      }}
+    >
+      <svg
+        width={300}
+        height={20}
+        viewBox="0 0 75 5"
+        shapeRendering="crispEdges"
+      >
+        <rect x="0" y="1" width="75" height="3" fill="#546E7A" />
+        {/* Dashed center line */}
+        {Array.from({ length: 10 }, (_, i) => (
+          <rect
+            key={i}
+            x={i * 8 + 1}
+            y="2"
+            width="4"
+            height="1"
+            fill="#FFF9C4"
+          />
+        ))}
+        {/* Edge lines */}
+        <rect x="0" y="0" width="75" height="1" fill="#FFFFFF" opacity="0.5" />
+        <rect x="0" y="4" width="75" height="1" fill="#FFFFFF" opacity="0.5" />
+      </svg>
+    </div>
+  );
+}
+
+/* ───── Pixel Sun ───── */
+function PixelSun({
+  y,
+  color,
+  opacity,
+}: {
+  y: number;
+  color: string;
+  opacity: number;
+}) {
+  if (opacity < 0.05) return null;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: "70%",
+        top: `${y}%`,
+        opacity,
+        transition: "top 0.8s ease-out, opacity 0.8s ease-out",
+        zIndex: 1,
+      }}
+    >
+      <svg
+        width={56}
+        height={56}
+        viewBox="0 0 8 8"
+        shapeRendering="crispEdges"
+        style={{ imageRendering: "pixelated" as const }}
+      >
+        <rect x="2" y="0" width="4" height="1" fill={color} />
+        <rect x="1" y="1" width="6" height="1" fill={color} />
+        <rect x="0" y="2" width="8" height="4" fill={color} />
+        <rect x="1" y="6" width="6" height="1" fill={color} />
+        <rect x="2" y="7" width="4" height="1" fill={color} />
+      </svg>
+    </div>
+  );
+}
+
+/* ───── Main LandingPage ───── */
+export function LandingPage() {
+  const navigate = useNavigate();
+  const [progress, setProgress] = useState(0);
+  const [boosted, setBoosted] = useState(false);
+  const boostTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const advance = useCallback(() => {
+    setProgress((p) => Math.min(p + 15, 100));
+    setBoosted(true);
+    if (boostTimer.current) clearTimeout(boostTimer.current);
+    boostTimer.current = setTimeout(() => setBoosted(false), 300);
+  }, []);
+
+  // Spacebar & touch
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        advance();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [advance]);
+
+  // Scroll wheel
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setProgress((p) => Math.min(100, Math.max(0, p + e.deltaY * 0.08)));
+    };
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    return () => window.removeEventListener("wheel", handleWheel);
+  }, []);
+
+  const v = getPhaseValues(progress);
+
+  return (
+    <div
+      onClick={advance}
+      style={{
+        position: "fixed",
+        inset: 0,
+        overflow: "hidden",
+        cursor: "pointer",
+        fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+        background: `linear-gradient(to bottom, ${v.skyTop} 0%, ${v.skyMid} 50%, ${v.skyBot} 100%)`,
+        transition: "background 0.8s ease-out",
+        imageRendering: "auto",
+      }}
+    >
+      {/* CSS Animations */}
+      <style>{`
+        @keyframes twinkle {
+          0% { opacity: 0.3; }
+          100% { opacity: 1; }
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes float {
+          0% { transform: translateY(0px) rotate(var(--rot, 0deg)); }
+          100% { transform: translateY(-10px) rotate(var(--rot, 0deg)); }
+        }
+        @keyframes birdFly {
+          0% { transform: translateY(0) translateX(0); }
+          100% { transform: translateY(-4px) translateX(6px); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+        @keyframes bounceIn {
+          0% { transform: scale(0.8); opacity: 0; }
+          60% { transform: scale(1.05); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+
+      {/* Sun */}
+      <PixelSun y={v.sunY} color={v.sunColor} opacity={v.sunOpacity} />
+
+      {/* Stars */}
+      {v.showStars && <PixelStars />}
+
+      {/* Moon */}
+      {v.showMoon && <PixelMoon />}
+
+      {/* Clouds */}
       <div
-        className="grain"
         style={{
           position: "absolute",
           inset: 0,
-          pointerEvents: "none",
-          zIndex: 8,
+          transform: `translateX(${-v.parallaxX * 0.15}px)`,
+          transition: "transform 0.5s ease-out",
+          zIndex: 2,
+        }}
+      >
+        <PixelCloud x={10} y={10} size={1.2} />
+        <PixelCloud x={35} y={6} size={1.5} />
+        <PixelCloud x={65} y={12} size={1} />
+        <PixelCloud x={85} y={5} size={1.3} />
+      </div>
+
+      {/* Far hills */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "25%",
+          left: `calc(0% - ${v.parallaxX * 0.3}px)`,
+          width: "150%",
+          height: "30%",
+          backgroundColor: v.hillFar,
+          clipPath: `polygon(
+            0% 100%, 0% 80%,
+            2% 80%, 2% 75%,
+            4% 75%, 4% 70%,
+            6% 70%, 6% 65%,
+            8% 65%, 8% 60%,
+            10% 60%, 10% 55%,
+            12% 55%, 12% 50%,
+            14% 50%, 14% 45%,
+            16% 45%, 16% 40%,
+            20% 40%, 20% 35%,
+            24% 35%, 24% 30%,
+            28% 30%, 28% 35%,
+            30% 35%, 30% 40%,
+            32% 40%, 32% 45%,
+            35% 45%, 35% 50%,
+            38% 50%, 38% 45%,
+            40% 45%, 40% 40%,
+            42% 40%, 42% 35%,
+            45% 35%, 45% 30%,
+            48% 30%, 48% 25%,
+            50% 25%, 50% 20%,
+            52% 20%, 52% 25%,
+            55% 25%, 55% 30%,
+            58% 30%, 58% 35%,
+            60% 35%, 60% 40%,
+            62% 40%, 62% 45%,
+            65% 45%, 65% 50%,
+            68% 50%, 68% 55%,
+            70% 55%, 70% 50%,
+            72% 50%, 72% 45%,
+            75% 45%, 75% 40%,
+            78% 40%, 78% 45%,
+            80% 45%, 80% 50%,
+            85% 50%, 85% 55%,
+            90% 55%, 90% 60%,
+            95% 60%, 95% 65%,
+            100% 65%, 100% 100%
+          )`,
+          transition: "background-color 0.8s ease-out, left 0.3s ease-out",
+          zIndex: 3,
         }}
       />
 
-      {/* Phase text */}
+      {/* City Skyline */}
+      <PixelSkyline parallaxX={v.parallaxX} showLights={v.showCityLights} />
+
+      {/* Bridge */}
+      <PixelBridge color={v.bridgeColor} parallaxX={v.parallaxX} />
+
+      {/* Water */}
       <div
         style={{
           position: "absolute",
-          top: 0,
+          bottom: "12%",
+          left: 0,
+          width: "100%",
+          height: "18%",
+          backgroundColor: v.waterColor,
+          transition: "background-color 0.8s ease-out",
+          zIndex: 5,
+        }}
+      >
+        {/* Water sparkles */}
+        {!v.showStars &&
+          Array.from({ length: 8 }, (_, i) => (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                left: `${10 + i * 12}%`,
+                top: `${30 + (i % 3) * 15}%`,
+                width: 4,
+                height: 2,
+                backgroundColor: "#FFFFFF",
+                opacity: 0.3,
+                animation: `pulse 2s ease-in-out ${i * 0.25}s infinite`,
+              }}
+            />
+          ))}
+      </div>
+
+      {/* Near hills / ground */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: `calc(0% - ${v.parallaxX * 0.8}px)`,
+          width: "160%",
+          height: "16%",
+          backgroundColor: v.hillNear,
+          clipPath: `polygon(
+            0% 100%, 0% 60%,
+            3% 60%, 3% 50%,
+            5% 50%, 5% 40%,
+            8% 40%, 8% 30%,
+            12% 30%, 12% 20%,
+            15% 20%, 15% 25%,
+            18% 25%, 18% 30%,
+            22% 30%, 22% 35%,
+            25% 35%, 25% 30%,
+            28% 30%, 28% 25%,
+            30% 25%, 30% 20%,
+            33% 20%, 33% 15%,
+            36% 15%, 36% 20%,
+            40% 20%, 40% 25%,
+            45% 25%, 45% 30%,
+            50% 30%, 50% 35%,
+            55% 35%, 55% 30%,
+            58% 30%, 58% 25%,
+            62% 25%, 62% 20%,
+            65% 20%, 65% 25%,
+            68% 25%, 68% 30%,
+            72% 30%, 72% 35%,
+            78% 35%, 78% 40%,
+            85% 40%, 85% 45%,
+            90% 45%, 90% 50%,
+            95% 50%, 95% 55%,
+            100% 55%, 100% 100%
+          )`,
+          transition: "background-color 0.8s ease-out, left 0.3s ease-out",
+          zIndex: 10,
+        }}
+      />
+
+      {/* Ground base */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          width: "100%",
+          height: "5%",
+          backgroundColor: "#D4A574",
+          zIndex: 10,
+        }}
+      />
+
+      {/* Trees */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          transform: `translateX(${-v.parallaxX * 0.9}px)`,
+          transition: "transform 0.3s ease-out",
+          zIndex: 11,
+        }}
+      >
+        <PixelTree x={5} bottom={12} size={1.2} />
+        <PixelTree x={15} bottom={14} size={0.9} dark />
+        <PixelTree x={42} bottom={13} size={1.1} />
+        <PixelTree x={55} bottom={11} size={1.3} dark />
+        <PixelTree x={80} bottom={12} size={1} />
+        <PixelTree x={92} bottom={14} size={0.8} dark />
+      </div>
+
+      {/* Sunflowers */}
+      <PixelSunflowers parallaxX={v.parallaxX} />
+
+      {/* Runway */}
+      {v.showRunway && <PixelRunway />}
+
+      {/* Money trail */}
+      <MoneyTrail progress={progress} />
+
+      {/* Birds */}
+      <PixelBirds progress={progress} />
+
+      {/* The Plane */}
+      <PixelPlane y={v.planeY} boosted={boosted} isNight={v.showStars} />
+
+      {/* Phase Text */}
+      <div
+        style={{
+          position: "absolute",
+          top: "15%",
           left: 0,
           right: 0,
-          bottom: 0,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          paddingTop: "15vh",
-          zIndex: 9,
+          textAlign: "center",
+          zIndex: 30,
           pointerEvents: "none",
         }}
       >
-        {/* Phase subtitle */}
         <p
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: "italic",
-            fontSize: "clamp(1rem, 2vw, 1.3rem)",
-            color: currentPhase.textColor,
-            letterSpacing: "0.05em",
-            margin: "0 0 1rem 0",
-            padding: "0 1rem",
-            textAlign: "center",
-            opacity: progress < 2 ? 0 : textOpacity,
-            transition: "opacity 0.5s ease, color 1s ease",
-          }}
-        >
-          {currentPhase.subtitle}
-        </p>
-
-        {/* Phase title */}
-        <h1
-          style={{
-            fontFamily: "'Outfit', sans-serif",
-            fontWeight: 500,
-            fontSize: "clamp(1.8rem, 5vw, 3.5rem)",
-            color: currentPhase.textColor,
-            letterSpacing: "0.04em",
-            textShadow: `0 0 40px ${currentPhase.glowColor}`,
+            fontSize: "clamp(1.5rem, 4vw, 2.8rem)",
+            fontWeight: 700,
+            color: "#FFFFFF",
+            textShadow: "2px 2px 0 rgba(0,0,0,0.5), 4px 4px 0 rgba(0,0,0,0.2)",
+            textTransform: "lowercase",
             margin: 0,
-            padding: "0 1.5rem",
-            textAlign: "center",
+            letterSpacing: "0.02em",
             lineHeight: 1.2,
-            opacity: progress < 2 ? 0 : textOpacity,
-            transition: "opacity 0.5s ease, color 1s ease",
-            maxWidth: 700,
+            padding: "0 1rem",
           }}
         >
-          {currentPhase.title}
-        </h1>
-
-        {/* BURN.MONEY logo — always visible */}
-        <p
-          style={{
-            fontFamily: "'Outfit', sans-serif",
-            fontWeight: 600,
-            fontSize: "clamp(0.7rem, 1.2vw, 0.85rem)",
-            color: currentPhase.textColor,
-            letterSpacing: "0.2em",
-            textTransform: "uppercase",
-            margin: "2rem 0 0 0",
-            opacity: 0.4,
-            transition: "color 1s ease",
-          }}
-        >
-          BURN.MONEY
+          {v.text}
         </p>
+      </div>
 
-        {/* CTA button — appears at Phase 5 */}
-        {showCTA && (
+      {/* CTA Button — Phase 5 */}
+      {progress >= 80 && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: "22%",
+            left: 0,
+            right: 0,
+            textAlign: "center",
+            zIndex: 30,
+            animation: "bounceIn 0.5s ease-out",
+          }}
+        >
           <button
-            onClick={() => navigate("/play")}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("/play");
+            }}
             style={{
-              fontFamily: "'Outfit', sans-serif",
-              fontWeight: 400,
-              fontSize: "clamp(0.9rem, 1.8vw, 1.05rem)",
-              color: "#faf5ef",
-              background: "rgba(232,168,124,0.2)",
-              border: "1px solid rgba(250,245,239,0.4)",
-              borderRadius: 9999,
-              padding: "0.85rem 2.5rem",
+              padding: "14px 36px",
+              fontSize: "clamp(1rem, 2.5vw, 1.4rem)",
+              fontWeight: 700,
+              fontFamily: "'Inter', system-ui, sans-serif",
+              color: "#FFFFFF",
+              backgroundColor: "#4CAF50",
+              border: "4px solid #2E7D32",
+              borderRadius: 0,
               cursor: "pointer",
-              letterSpacing: "0.06em",
-              marginTop: "2.5rem",
-              pointerEvents: "auto",
-              opacity: Math.min(1, (progress - 90) / 5),
-              transition:
-                "background 0.3s, border-color 0.3s, opacity 0.5s ease",
-              backdropFilter: "blur(10px)",
+              textTransform: "lowercase",
+              letterSpacing: "0.05em",
+              boxShadow: `
+                4px 4px 0 #2E7D32,
+                -2px -2px 0 #66BB6A inset
+              `,
+              imageRendering: "pixelated" as const,
+              outline: "none",
+              transition: "transform 0.1s, box-shadow 0.1s",
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(232,168,124,0.35)";
-              e.currentTarget.style.borderColor = "rgba(250,245,239,0.7)";
+            onMouseDown={(e) => {
+              (e.currentTarget.style.transform = "translate(2px, 2px)");
+              (e.currentTarget.style.boxShadow = "2px 2px 0 #2E7D32, -2px -2px 0 #66BB6A inset");
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "rgba(232,168,124,0.2)";
-              e.currentTarget.style.borderColor = "rgba(250,245,239,0.4)";
+            onMouseUp={(e) => {
+              (e.currentTarget.style.transform = "translate(0, 0)");
+              (e.currentTarget.style.boxShadow = "4px 4px 0 #2E7D32, -2px -2px 0 #66BB6A inset");
             }}
           >
-            find your runway →
+            play burn.money →
           </button>
-        )}
-      </div>
-
-      {/* Instruction hint */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 40,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 10,
-          pointerEvents: "none",
-          opacity: progress < 5 ? 0.7 : Math.max(0, 0.7 - progress / 20),
-          transition: "opacity 0.5s ease",
-        }}
-      >
-        <p
-          style={{
-            fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: "italic",
-            fontSize: "clamp(0.85rem, 1.5vw, 1rem)",
-            color: "rgba(250,245,239,0.6)",
-            textAlign: "center",
-            margin: 0,
-            letterSpacing: "0.03em",
-          }}
-        >
-          press spacebar to fly
-        </p>
-        <div
-          className="bounce-arrow"
-          style={{
-            textAlign: "center",
-            fontSize: 18,
-            color: "rgba(250,245,239,0.4)",
-            marginTop: 8,
-          }}
-        >
-          ▼
         </div>
-      </div>
+      )}
 
       {/* Progress bar */}
       <div
@@ -1021,97 +1087,52 @@ export function LandingPage() {
           position: "absolute",
           bottom: 0,
           left: 0,
-          right: 0,
-          height: 3,
-          background: "rgba(0,0,0,0.2)",
-          zIndex: 10,
+          width: "100%",
+          height: 6,
+          backgroundColor: "rgba(0,0,0,0.3)",
+          zIndex: 50,
         }}
       >
         <div
           style={{
             height: "100%",
             width: `${progress}%`,
-            background:
-              "linear-gradient(90deg, #E8A87C, #C4788A, #5C4A6E)",
-            transition: "width 0.15s ease-out",
+            backgroundColor: "#FFC107",
+            transition: "width 0.3s ease-out",
+            imageRendering: "pixelated" as const,
+            boxShadow: "0 0 4px rgba(255,193,7,0.6)",
           }}
         />
       </div>
 
-      {/* Keyframe styles */}
-      <style>{`
-        @keyframes fogDrift1 {
-          0% { transform: translateX(-8%); }
-          100% { transform: translateX(8%); }
-        }
-        @keyframes fogDrift2 {
-          0% { transform: translateX(5%); }
-          100% { transform: translateX(-5%); }
-        }
-        @keyframes fogDrift3 {
-          0% { transform: translateX(-6%) translateY(-2%); }
-          100% { transform: translateX(6%) translateY(2%); }
-        }
-        @keyframes waterShimmer {
-          0%, 100% { opacity: 0.2; }
-          50% { opacity: 0.5; }
-        }
-        @keyframes starTwinkle {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
-        }
-        @keyframes propellerSpin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes bounceArrow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(6px); }
-        }
-        @keyframes cityBlink {
-          0%, 90%, 100% { opacity: 1; }
-          95% { opacity: 0.3; }
-        }
-
-        .fog-1 {
-          animation: fogDrift1 60s ease-in-out infinite alternate;
-        }
-        .fog-2 {
-          animation: fogDrift2 80s ease-in-out infinite alternate-reverse;
-        }
-        .fog-3 {
-          animation: fogDrift3 100s ease-in-out infinite alternate;
-        }
-        .water-shimmer {
-          animation: waterShimmer 4s ease-in-out infinite;
-        }
-        .star-twinkle {
-          animation: starTwinkle 3s ease-in-out infinite;
-        }
-        .propeller-spin {
-          animation: propellerSpin 0.15s linear infinite;
-        }
-        .bounce-arrow {
-          animation: bounceArrow 1.5s ease-in-out infinite;
-        }
-        .city-light-blink {
-          animation: cityBlink 5s ease-in-out infinite;
-        }
-        .grain::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          opacity: 0.04;
-          pointer-events: none;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-          background-repeat: repeat;
-          background-size: 256px 256px;
-        }
-
-        @media (max-width: 640px) {
-          .fog-3 { display: none; }
-        }
-      `}</style>
+      {/* Hint text */}
+      {progress < 10 && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 20,
+            left: 0,
+            right: 0,
+            textAlign: "center",
+            zIndex: 30,
+            animation: "pulse 2s ease-in-out infinite",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "0.85rem",
+              color: "rgba(255,255,255,0.7)",
+              textShadow: "1px 1px 0 rgba(0,0,0,0.3)",
+              letterSpacing: "0.05em",
+              textTransform: "lowercase",
+            }}
+          >
+            press spacebar / tap / scroll to fly
+          </span>
+        </div>
+      )}
     </div>
   );
 }
+
+export default LandingPage;
